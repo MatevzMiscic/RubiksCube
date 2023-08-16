@@ -44,7 +44,7 @@ class EncodedSet:
         #print(self)
         #print("rank =", r)
         left = (self.bits >> ((r + 1) * (self.b + 1))) << (r * (self.b + 1))
-        right = self.bits & ((1 << (r * self.b)) - 1)
+        right = self.bits & ((1 << (r * (self.b + 1))) - 1)
         self.bits = left | right
         self.mul >>= self.b + 1
         self.separ >>= self.b + 1
@@ -100,5 +100,5 @@ def rank(perm):
 
 
 
-rank([0, 1, 2, 3])
-#s = EncodedSet(4)
+#rank([0, 1, 2, 3])
+#s = EncodedSet(7)
