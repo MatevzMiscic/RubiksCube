@@ -32,16 +32,30 @@ class Cube2:
     def solved():
         return Cube2([i for i in range(8)], [0 for _ in range(8)])
 
+    def clone(self):
+        return Cube2(self.perm.copy(), self.orient.copy())
+
     def apply(self, move):
         for i in range(8):
             self.orient[i] = (move.orient[self.perm[i]] + self.orient[i]) % 3
             self.perm[i] = move.perm[self.perm[i]]
 
+    def neighbours(self):
+        n = []
+        moves = [Cube2.B, Cube2.R, Cube2.U]
+        for move in moves:
+            for i in range(4):
+                if i > 0:
+                    n.append(self.clone())
+                self.apply(move)
+        return n
+
     def hash(self):
         a = 0
-        for i in range(1, 8):
+        for i in range(1, 7):
             a = 3 * a + self.orient[i]
         b = rank(self.perm)
+        #print(a, b, (3**6) * b + a)
         return (3**6) * b + a
 
     def __repr__(self):
