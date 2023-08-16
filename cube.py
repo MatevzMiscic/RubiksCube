@@ -1,5 +1,5 @@
 from permutation import rank
-
+from random import randint
 
 """
 F ... front
@@ -31,6 +31,20 @@ class Cube2:
     @staticmethod
     def solved():
         return Cube2([i for i in range(8)], [0 for _ in range(8)])
+    
+    @staticmethod
+    def shuffled(n=50):
+        moves = [Cube2.B, Cube2.B2, Cube2.B3, Cube2.R, Cube2.R2, Cube2.R3, Cube2.U, Cube2.U2, Cube2.U3]
+        cube = Cube2([i for i in range(8)], [0 for _ in range(8)])
+        for i in range(n):
+            cube.apply(moves[randint(0,8)])
+        return cube
+    
+    def isSolved(self):
+        for i in range(8):
+            if self.perm[i] != i or self.orient[i] != 0:
+                return False
+        return True
 
     def clone(self):
         return Cube2(self.perm.copy(), self.orient.copy())
@@ -39,6 +53,11 @@ class Cube2:
         for i in range(8):
             self.orient[i] = (move.orient[self.perm[i]] + self.orient[i]) % 3
             self.perm[i] = move.perm[self.perm[i]]
+
+    def __mul__(self, other):
+        perm = [other.perm[self.perm[i]] for i in range(8)]
+        orient = [(other.orient[self.perm[i]] + self.orient[i]) % 3 for i in range(8)]
+        return Cube2(perm, orient)
 
     def neighbours(self):
         n = []
@@ -67,6 +86,20 @@ Cube2.U = Cube2([0, 1, 2, 3, 7, 4, 5, 6], [0, 0, 0, 0, 0, 0, 0, 0])
 Cube2.D = Cube2([1, 2, 3, 0, 4, 5, 6, 7], [0, 0, 0, 0, 0, 0, 0, 0])
 Cube2.L = Cube2([3, 1, 2, 7, 0, 5, 6, 4], [1, 0, 0, 2, 2, 0, 0, 1])
 Cube2.R = Cube2([0, 5, 1, 3, 4, 6, 2, 7], [0, 2, 1, 0, 0, 1, 2, 0])
+
+Cube2.F2 = Cube2.F * Cube2.F
+Cube2.B2 = Cube2.B * Cube2.B
+Cube2.U2 = Cube2.U * Cube2.U
+Cube2.D2 = Cube2.D * Cube2.D
+Cube2.L2 = Cube2.L * Cube2.L
+Cube2.R2 = Cube2.R * Cube2.R
+
+Cube2.F3 = Cube2.F2 * Cube2.F
+Cube2.B3 = Cube2.B2 * Cube2.B
+Cube2.U3 = Cube2.U2 * Cube2.U
+Cube2.D3 = Cube2.D2 * Cube2.D
+Cube2.L3 = Cube2.L2 * Cube2.L
+Cube2.R3 = Cube2.R2 * Cube2.R
 
 F = Cube2([4, 0, 2, 3, 5, 1, 6, 7], [2, 1, 0, 0, 1, 2, 0, 0])
 B = Cube2([0, 1, 6, 2, 4, 5, 7, 3], [0, 0, 2, 1, 0, 0, 1, 2])
