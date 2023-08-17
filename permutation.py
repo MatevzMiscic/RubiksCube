@@ -71,6 +71,7 @@ for i in range(5):
         print(s.rank(i))
 """
 
+# computes factorials
 n = 10
 fact = [1 for _ in range(n)]
 f = 1
