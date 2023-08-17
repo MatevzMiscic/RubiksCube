@@ -34,10 +34,10 @@ class Cube2:
     
     @staticmethod
     def shuffled(n=50):
-        moves = [Cube2.B, Cube2.B2, Cube2.B3, Cube2.R, Cube2.R2, Cube2.R3, Cube2.U, Cube2.U2, Cube2.U3]
+        #moves = [Cube2.B, Cube2.B2, Cube2.B3, Cube2.R, Cube2.R2, Cube2.R3, Cube2.U, Cube2.U2, Cube2.U3]
         cube = Cube2([i for i in range(8)], [0 for _ in range(8)])
         for i in range(n):
-            cube.apply(moves[randint(0,8)])
+            cube.apply(Cube2.moves[randint(0, len(Cube2.moves) - 1)])
         return cube
     
     def isSolved(self):
@@ -57,6 +57,15 @@ class Cube2:
     def __mul__(self, other):
         perm = [other.perm[self.perm[i]] for i in range(8)]
         orient = [(other.orient[self.perm[i]] + self.orient[i]) % 3 for i in range(8)]
+        return Cube2(perm, orient)
+
+    def inv(self):
+        perm = [0 for _ in range(8)]
+        for i in range(8):
+            perm[self.perm[i]] = i
+        orient = [0 for _ in range(8)]
+        for i in range(8):
+            orient[i] = (3 - self.orient[perm[i]]) % 3
         return Cube2(perm, orient)
 
     def neighbours(self):
@@ -100,6 +109,14 @@ Cube2.U3 = Cube2.U2 * Cube2.U
 Cube2.D3 = Cube2.D2 * Cube2.D
 Cube2.L3 = Cube2.L2 * Cube2.L
 Cube2.R3 = Cube2.R2 * Cube2.R
+
+Cube2.moves = [
+    Cube2.B, Cube2.B2, Cube2.B3, Cube2.R, Cube2.R2, Cube2.R3, Cube2.U, Cube2.U2, Cube2.U3, 
+    Cube2.F, Cube2.F2, Cube2.F3, Cube2.L, Cube2.L2, Cube2.L3, Cube2.D, Cube2.D2, Cube2.D3
+]
+Cube2.names = [
+    "B", "B2", "B3", "R", "R2", "R3", "U", "U2", "U3", "F", "F2", "F3", "L", "L2", "L3", "D", "D2", "D3"
+]
 
 F = Cube2([4, 0, 2, 3, 5, 1, 6, 7], [2, 1, 0, 0, 1, 2, 0, 0])
 B = Cube2([0, 1, 6, 2, 4, 5, 7, 3], [0, 0, 2, 1, 0, 0, 1, 2])
