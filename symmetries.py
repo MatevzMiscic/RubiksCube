@@ -32,14 +32,9 @@ def remove_symm(cube):
     #print(cube)
     #c = cube.clone()
     A = perm[cube.perm[0]]
-    cube.apply(A)
-    #print(cube)
     B = rot[cube.orient[0]]
-    cube.apply(B)
-    #print(c*A*B)
-    #c.apply(A*B)
-    #print(cube, c)
-    return A*B
+    C = A*B
+    return cube*C, C
 
 
 

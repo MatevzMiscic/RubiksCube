@@ -45,7 +45,7 @@ def solve(cube):
 
 # returns the sequence of moves that solves given rubiks cube
 def solve2(cube):
-    X = remove_symm(cube)
+    cube, X = remove_symm(cube)
     moves = solve(cube)
     return [X*move*X.inv() for move in moves]
 
