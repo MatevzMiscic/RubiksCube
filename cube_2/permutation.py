@@ -72,7 +72,7 @@ for i in range(5):
 """
 
 # computes factorials
-n = 10
+n = 15
 fact = [1 for _ in range(n)]
 f = 1
 for i in range(1, n):
@@ -92,7 +92,7 @@ def rank_helper(perm, i, n, eset):
     b = rank_helper(perm, i + 1, n, eset)
     return a * fact[n - 1 - i] + b
 
-# returns the lexicographic rank of the given permutation od integers 0, 1,..., len(perm) - 1
+# returns the lexicographic rank of the given permutation of integers 0, 1,..., len(perm) - 1
 def rank(perm):
     n = len(perm)
     eset = EncodedSet(n)
