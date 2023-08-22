@@ -99,11 +99,11 @@ def hash2(cube):
         a = 3*a + ori[i]
     mask = (1 << cube.edge[4]) | (1 << cube.edge[5]) | (1 << cube.edge[6]) | (1 << cube.edge[7])
     b = combrank[mask]
-
+    """
     code = 2187*b + a
     if code >= 1082565:
         print("a =", a, "b =", b)
-    
+    """
     return 2187*b + a
 
 def preprocess2():
@@ -146,16 +146,20 @@ def preprocess2():
                     print(d)
                 if dist[d] == 15:
                     dist[d] = dist[c] + 1
-                    if dist[d] <= 3:
-                        queue.append((v, d, j))
+                    #if dist[d] <= 3:
+                    queue.append((v, d, j))
     return dist
 
 def solve2(cube, data):
+    moves2 = [
+        Cube.B, Cube.B2, Cube.B3, Cube.R2, Cube.U, Cube.U2, Cube.U3, 
+        Cube.F, Cube.F2, Cube.F3, Cube.L2, Cube.D, Cube.D2, Cube.D3
+    ]
     moves = []
     code = hash2(cube)
     dist = data[code]
     while dist > 0:
-        for move in Cube.moves:
+        for move in moves2:
             v = cube*move
             c = hash2(v)
             d = data[c]
@@ -166,14 +170,16 @@ def solve2(cube, data):
                 break
     return moves
 
+"""
 data = preprocess2()
 
 folder = os.getcwd()
-filename = "stage2.bin"
+filename = "cube_3/stage2.bin"
 path = os.path.join(folder, filename)
 
 with open(path, 'bw') as file:
     file.write(data)
+#"""
 
 """
 #data1 = preprocess1()
@@ -187,3 +193,26 @@ moves = solve2(c, data2)
 applyall(c, moves)
 print(c)
 #"""
+
+
+
+# read distances from binary file
+folder = os.getcwd()
+filename = "cube_3/stage2.bin"
+path = os.path.join(folder, filename)
+
+stage1 = preprocess1()
+with open(path, 'br') as file:
+    stage2 = file.read()
+
+ans = ""
+while ans != "close":
+    cube = Cube.shuffled()
+    print(cube)
+    moves1 = solve1(cube, stage1)
+    applyall(cube, moves1)
+    print(cube)
+    moves2 = solve2(cube, stage2)
+    applyall(cube, moves2)
+    print(cube)
+    ans = input()

@@ -10,7 +10,7 @@ for i in range(1, n):
     for j in range(i - 1):
         binom[i].append(binom[i - 1][j] + binom[i - 1][j + 1])
     binom[i].append(1)
-print(binom)
+#print(binom)
 
 # counts set bits among least significant 12 bits
 def countbits(n):

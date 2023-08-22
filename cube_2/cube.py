@@ -35,7 +35,7 @@ class Cube2:
     @staticmethod
     def shuffled(n=50):
         #moves = [Cube2.B, Cube2.B2, Cube2.B3, Cube2.R, Cube2.R2, Cube2.R3, Cube2.U, Cube2.U2, Cube2.U3]
-        cube = Cube2([i for i in range(8)], [0 for _ in range(8)])
+        cube = Cube2.solved()
         for i in range(n):
             cube.apply(Cube2.moves[randint(0, len(Cube2.moves) - 1)])
         return cube
