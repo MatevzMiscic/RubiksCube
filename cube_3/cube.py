@@ -1,4 +1,4 @@
-
+from random import randint
 
 
 
@@ -13,6 +13,13 @@ class Cube:
     @staticmethod
     def solved():
         return Cube([i for i in range(8)], [0 for _ in range(8)], [i for i in range(12)], [0 for _ in range(12)])
+
+    @staticmethod
+    def shuffled(n=50):
+        cube = Cube.solved()
+        for i in range(n):
+            cube.apply(Cube.moves[randint(0, len(Cube.moves) - 1)])
+        return cube
 
     def apply(self, move):
         for i in range(8):
