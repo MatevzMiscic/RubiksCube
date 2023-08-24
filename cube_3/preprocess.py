@@ -1,6 +1,7 @@
 import os
 from cube import Cube
 from combination import combrank1, combrank2, sign
+from permutation import rank, rank_sign, mul, inv
 #import combination
 from collections import deque
 from inout import compress, read, write, get
@@ -14,40 +15,77 @@ from random import randint
 # G_4 = <1>  solved state
 
 
-def edgeori_hash(cube):
+def hash1(cube):
     code = 0
     for i in range(12):
         code |= (cube.edgeori[i] << cube.edge[i])
     return code & 2047
 
-def preprocess1():
+def preprocess1old():
     n = 2**11
     dist = bytearray(n)
     for i in range(n):
         dist[i] = 15
 
     cube = Cube.solved()
-    code = edgeori_hash(cube)
+    code = hash1(cube)
     queue = deque([(cube, code)])
     dist[code] = 0
 
     while len(queue) > 0:
         u, c = queue.popleft()
         for v in u.neighbours():
-            d = edgeori_hash(v)
+            d = hash1(v)
             if dist[d] == 15:
                 dist[d] = dist[c] + 1
                 queue.append((v, d))
     return dist
 
+def preprocess1():
+    moves = [
+        [Cube.F, Cube.F2, Cube.F3], 
+        [Cube.B, Cube.B2, Cube.B3], 
+        [Cube.U, Cube.U2, Cube.U3], 
+        [Cube.D, Cube.D2, Cube.D3], 
+        [Cube.R, Cube.R2, Cube.R3], 
+        [Cube.L, Cube.L2, Cube.L3]
+    ]
+    n = 2**11
+
+    dist = bytearray(n)
+    for i in range(n):
+        dist[i] = 15
+
+    cube = Cube.solved()
+    code = hash1(cube)
+    queue = deque([(cube, code, -1)])
+    dist[code] = 0
+
+    while len(queue) > 0:
+        u, c, i = queue.popleft()
+        for j in range(6):
+            if j == i:
+                continue
+            for move in moves[j]:
+                v = u * move
+                d = hash1(v)
+                if d >= n:
+                    print(v)
+                    print(d)
+                if dist[d] == 15:
+                    dist[d] = dist[c] + 1
+                    #if dist[d] <= 3:
+                    queue.append((v, d, j))
+    return dist
+
 def solve1(cube, data):
     moves = []
-    code = edgeori_hash(cube)
+    code = hash1(cube)
     dist = data[code]
     while dist > 0:
         for move in Cube.moves:
             v = cube*move
-            c = edgeori_hash(v)
+            c = hash1(v)
             d = data[c]
             if d < dist:
                 cube = v
@@ -56,7 +94,12 @@ def solve1(cube, data):
                 break
     return moves
 
-
+"""
+data = preprocess1()
+m = max(data)
+data = compress(data)
+write("cube_3/stage1.bin", data)
+#"""
 
 
 
@@ -80,14 +123,14 @@ c = Cube.solved()
 for move in [Cube.L, Cube.R, Cube.U, Cube.B, Cube.L2]:
     c.apply(move)
     print(c)
-    code = edgeori_hash(c)
+    code = hash1(c)
     print(code)
     print(data[code])
 
 print("Checking neighbours...")
 for n in c.neighbours():
     print(n)
-    code = edgeori_hash(n)
+    code = hash1(n)
     print(code)
     print(data[code])
 """
@@ -320,9 +363,117 @@ applyall(c, moves)
 print(c)
 """
 
+def sfld4():
+    n = 40
+    moves2 = [
+        Cube.B2, Cube.R2, Cube.U2, 
+        Cube.F2, Cube.L2, Cube.D2
+    ]
+    cube = Cube.solved()
+    for i in range(n):
+        cube.apply(moves2[randint(0, len(moves2) - 1)])
+    return cube
 
 
-def hash3(cube):
-    perm = cube.corner
-    perm1 = [perm[0]//2, perm[2]//2, perm[5]//2, perm[7]//2]
-    perm2 = [perm[1]//2, perm[3]//2, perm[4]//2, perm[6]//2]
+def hash4(cube):
+    p = cube.corner
+    p1 = [p[0] // 2, p[2] // 2, p[5] // 2, p[7] // 2]
+    p2 = [p[1] // 2, p[3] // 2, p[4] // 2, p[6] // 2]
+    fun = [0, 0, 1, 1, 0, 1, 2, 3, 2, 2, 3, 3]
+    q = cube.edge
+    q1 = [fun[q[0]], fun[q[2]], fun[q[8]], fun[q[10]]]
+    q2 = [fun[q[4]], fun[q[5]], fun[q[6]], fun[q[7]]]
+    q3 = [fun[q[1]], fun[q[3]], fun[q[9]], fun[q[11]]]
+    #print(p1, p2, q1, q2, q3)
+    a = rank(p1) # up to 24
+    b = mul(inv(p1), p2)[0] # # up to 4
+    c = rank(q1) # up to 24
+    d = rank(q2) # up to 24
+    e = rank_sign(q3, (sign(q1) + sign(q2)) % 2) # up to 12
+    return 12*(24*(24*(4*a + b) + c) + d) + e
+
+
+def preprocess4():
+    moves = [
+        Cube.F2, 
+        Cube.B2, 
+        Cube.U2, 
+        Cube.D2, 
+        Cube.R2, 
+        Cube.L2
+    ]
+    n = 663552
+
+    global count
+    count = 0
+    perc = n // 100
+
+    dist = bytearray(n)
+    for i in range(n):
+        dist[i] = 30
+
+    cube = Cube.solved()
+    code = hash4(cube)
+    queue = deque([(cube, code, -1)])
+    dist[code] = 0
+
+    while len(queue) > 0:
+        u, c, i = queue.popleft()
+
+        count += 1
+        if count % perc == 0:
+            print(count // perc)
+        
+        for j in range(6):
+            if j == i:
+                continue
+            v = u * moves[j]
+            d = hash4(v)
+            if d >= n:
+                print(v)
+                print(d)
+            if dist[d] == 30:
+                dist[d] = dist[c] + 1
+                #if dist[d] <= 3:
+                queue.append((v, d, j))
+    return dist
+
+def solve4(cube, data):
+    moves2 = [
+        Cube.B2, Cube.R2, Cube.U2, 
+        Cube.F2, Cube.L2, Cube.D2,
+    ]
+    moves = []
+    code = hash4(cube)
+    #dist = get(data, code)
+    dist = data[code]
+    while dist > 0:
+        for move in moves2:
+            v = cube*move
+            c = hash4(v)
+            #d = get(data, c)
+            d = data[c]
+            if d < dist:
+                cube = v
+                dist = d
+                moves.append(move)
+                break
+    return moves
+
+"""
+data = preprocess4()
+m = max(data)
+if m < 16:
+    data = compress(data)
+    write("cube_3/stage4.bin", data)
+#"""
+
+"""
+c = Cube.solved()
+applyall(c, [Cube.F2, Cube.U2, Cube.R2])
+print(c)
+data = preprocess4()
+moves = solve4(c, data)
+applyall(c, moves)
+print(c)
+#"""
