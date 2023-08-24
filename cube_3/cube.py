@@ -21,6 +21,9 @@ class Cube:
             cube.apply(Cube.moves[randint(0, len(Cube.moves) - 1)])
         return cube
 
+    def clone(self):
+        return Cube(self.corner.copy(), self.cornerori.copy(), self.edge.copy(), self.edgeori.copy())
+
     def apply(self, move):
         for i in range(8):
             self.cornerori[i] = (move.cornerori[self.corner[i]] + self.cornerori[i]) % 3
@@ -28,6 +31,10 @@ class Cube:
         for i in range(12):        
             self.edgeori[i] = (move.edgeori[self.edge[i]] + self.edgeori[i]) % 2
             self.edge[i] = move.edge[self.edge[i]]
+    
+    def applyall(self, moves):
+        for move in moves:
+            self.apply(move)
 
     def __mul__(self, other):
         cornerori = [(other.cornerori[self.corner[i]] + self.cornerori[i]) % 3 for i in range(8)]
