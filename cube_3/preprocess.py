@@ -1,7 +1,10 @@
 import os
 from cube import Cube
-from combination import combrank
+from combination import combrank1, combrank2, sign
+#import combination
 from collections import deque
+from inout import compress, read, write, get
+from random import randint
 
 
 # G_0 = <F, B, U, D, L, R>  all states
@@ -98,7 +101,7 @@ def hash2(cube):
     for i in range(7):
         a = 3*a + ori[i]
     mask = (1 << cube.edge[4]) | (1 << cube.edge[5]) | (1 << cube.edge[6]) | (1 << cube.edge[7])
-    b = combrank[mask]
+    b = combrank1[mask]
     """
     code = 2187*b + a
     if code >= 1082565:
@@ -150,26 +153,6 @@ def preprocess2():
                     queue.append((v, d, j))
     return dist
 
-def solve2(cube, data):
-    moves2 = [
-        Cube.B, Cube.B2, Cube.B3, Cube.R2, Cube.U, Cube.U2, Cube.U3, 
-        Cube.F, Cube.F2, Cube.F3, Cube.L2, Cube.D, Cube.D2, Cube.D3
-    ]
-    moves = []
-    code = hash2(cube)
-    dist = data[code]
-    while dist > 0:
-        for move in moves2:
-            v = cube*move
-            c = hash2(v)
-            d = data[c]
-            if d < dist:
-                cube = v
-                dist = d
-                moves.append(move)
-                break
-    return moves
-
 """
 data = preprocess2()
 
@@ -195,7 +178,7 @@ print(c)
 #"""
 
 
-
+"""
 # read distances from binary file
 folder = os.getcwd()
 filename = "cube_3/stage2.bin"
@@ -216,3 +199,130 @@ while ans != "close":
     applyall(cube, moves2)
     print(cube)
     ans = input()
+"""
+
+
+
+
+
+
+#"""
+def hash32(cube):
+    mask = (1 << cube.edge[0]) | (1 << cube.edge[2]) | (1 << cube.edge[8]) | (1 << cube.edge[10])
+    mask = (mask >> 8) | (mask & 15)
+    a = combrank2[mask]
+    mask = (1 << cube.corner[0]) | (1 << cube.corner[2]) | (1 << cube.corner[5]) | (1 << cube.corner[7])
+    b = combrank2[mask]
+    c = sign(cube.edge)
+    return ((70*a + b) << 1) | c
+
+from permutation import rank
+
+h3 = read("cube_3/hash3.bin")
+def hash3(cube):
+    idx = rank(cube.corner)
+    a = (h3[2*idx] << 8) | h3[2*idx + 1]
+    mask = (1 << cube.edge[0]) | (1 << cube.edge[2]) | (1 << cube.edge[8]) | (1 << cube.edge[10])
+    mask = (mask >> 4) | (mask & 15)
+    b = combrank2[mask]
+    #print(a, b)
+    return 420*b + a
+
+count = 0
+
+def preprocess3():
+    moves = [
+        [Cube.F2], 
+        [Cube.B2], 
+        [Cube.U, Cube.U2, Cube.U3], 
+        [Cube.D, Cube.D2, Cube.D3], 
+        [Cube.R2], 
+        [Cube.L2]
+    ]
+    n = 70 * 420
+
+    global count
+    count = 0
+    perc = n // 100
+
+    dist = bytearray(n)
+    for i in range(n):
+        dist[i] = 30
+
+    cube = Cube.solved()
+    code = hash3(cube)
+    queue = deque([(cube, code, -1)])
+    dist[code] = 0
+
+    while len(queue) > 0:
+        u, c, i = queue.popleft()
+
+        count += 1
+        if count % perc == 0:
+            print(count // perc)
+        
+        for j in range(6):
+            if j == i:
+                continue
+            for move in moves[j]:
+                v = u * move
+                d = hash3(v)
+                if d >= n:
+                    print(v)
+                    print(d)
+                if dist[d] == 30:
+                    dist[d] = dist[c] + 1
+                    #if dist[d] <= 3:
+                    queue.append((v, d, j))
+    return dist
+
+
+
+def solve3(cube, data):
+    moves2 = [
+        Cube.B2, Cube.R2, Cube.U, Cube.U2, Cube.U3, 
+        Cube.F2, Cube.L2, Cube.D, Cube.D2, Cube.D3
+    ]
+    moves = []
+    code = hash3(cube)
+    dist = get(data, code)
+    while dist > 0:
+        for move in moves2:
+            v = cube*move
+            c = hash3(v)
+            d = get(data, c)
+            if d < dist:
+                cube = v
+                dist = d
+                moves.append(move)
+                break
+    return moves
+#"""
+
+data = read("cube_3/stage3.bin")
+
+def sfld3():
+    n = 40
+    moves2 = [
+        Cube.B2, Cube.R2, Cube.U, Cube.U2, Cube.U3, 
+        Cube.F2, Cube.L2, Cube.D, Cube.D2, Cube.D3
+    ]
+    cube = Cube.solved()
+    for i in range(n):
+        cube.apply(moves2[randint(0, len(moves2) - 1)])
+    return cube
+
+"""
+c = sfld3()
+print(c)
+moves = solve3(c, data)
+applyall(c, moves)
+print(c)
+"""
+
+
+
+def hash3(cube):
+    perm = cube.corner
+    perm1 = [perm[0]//2, perm[2]//2, perm[5]//2, perm[7]//2]
+    perm2 = [perm[1]//2, perm[3]//2, perm[4]//2, perm[6]//2]
