@@ -116,7 +116,16 @@ def rank_sign(perm, sign):
     eset = EncodedSet(n)
     return rank_sign_helper(perm, 0, n, sign, eset)
     
+# returns product of permutations a and b where a is applied first
+def mul(a, b):
+    return [b[a[i]] for i in range(len(a))]
 
+# returns inverse of given permutation
+def inv(perm):
+    out = [0 for _ in range(len(perm))]
+    for i in range(len(perm)):
+        out[perm[i]] = i
+    return out
 
 # computes sign of permutation (0 means even, 1 means odd)
 def sign(perm):
