@@ -99,7 +99,56 @@ def rank(perm):
     return rank_helper(perm, 0, n, eset)
 
 
+# returns number of permutation of given sign less than perm[i,..., n-1] on set in lex order
+def rank_sign_helper(perm, i, n, sign, eset):
+    if i >= n - 1:
+        return 0
+    a = eset.rank(perm[i])
+    if i == n - 2:
+        return a * (1 - sign)
+    eset.delete(perm[i])
+    #print(eset)
+    b = rank_sign_helper(perm, i + 1, n, (sign + a) % 2, eset)
+    return a * fact[n - 1 - i] // 2 + b
+
+def rank_sign(perm, sign):
+    n = len(perm)
+    eset = EncodedSet(n)
+    return rank_sign_helper(perm, 0, n, sign, eset)
+    
 
 
-#rank([0, 1, 2, 3])
-#s = EncodedSet(7)
+# computes sign of permutation (0 means even, 1 means odd)
+def sign(perm):
+    n = len(perm)
+    cycle = 0
+    vis = [False for _ in range(n)]
+    for i in range(n):
+        if not vis[i]:
+            vis[i] = True
+            cycle += 1
+            j = i
+            #print(j, "...", cycle)
+            while perm[j] != i:
+                j = perm[j]
+                vis[j] = True
+    return (n - cycle) % 2
+
+
+"""
+import itertools
+
+n = 4
+rank = [0 for _ in range(fact[n])]
+
+count = 0
+even = 0
+for perm in itertools.permutations([i for i in range(n)]):
+    rank[count] = even
+    reven = rank_sign(perm, 0)
+    rodd = rank_sign(perm, 1)
+    print(reven, even, reven + rodd, count, reven == even and reven + rodd == count)
+    if sign(perm) == 0:
+        even += 1
+    count += 1
+"""
