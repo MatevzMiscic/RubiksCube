@@ -10,7 +10,7 @@ def compress(array):
         data[i] = (array[2*i] << 4) | array[2*i + 1]
     return data
 
-# returns element at index ixx in the given compressed bytearray
+# returns element at index idx in the given compressed bytearray
 def get(array, idx):
     if idx % 2 == 0:
         return array[idx // 2] >> 4
