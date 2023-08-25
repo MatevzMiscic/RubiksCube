@@ -198,13 +198,9 @@ def preprocess2():
 
 """
 data = preprocess2()
-
-folder = os.getcwd()
-filename = "cube_3/stage2.bin"
-path = os.path.join(folder, filename)
-
-with open(path, 'bw') as file:
-    file.write(data)
+m = max(data)
+data = compress(data)
+write("cube_3/stage2.bin", data)
 #"""
 
 """
@@ -319,7 +315,14 @@ def preprocess3():
                     queue.append((v, d, j))
     return dist
 
-
+#"""
+data = preprocess3()
+m = max(data)
+print(m)
+if m < 16:
+    data = compress(data)
+    write("cube_3/stage3.bin", data)
+#"""
 
 def solve3(cube, data):
     moves2 = [
