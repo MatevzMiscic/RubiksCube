@@ -158,7 +158,7 @@ for perm1 in itertools.permutations([0, 1, 2, 3]):
             print("Napaka xxxxxxxxxxxxxxxxxxxxx", perm)
 #"""
 
-#"""
+"""
 # checking if hash_i is really  invariant for left multiplication by elements of stage i
 from preprocess import *
 

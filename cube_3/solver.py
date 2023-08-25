@@ -2,6 +2,7 @@ from cube import Cube
 from inout import read
 from combination import combrank1, combrank2
 from permutation import rank, rank_sign, mul, inv, sign
+from convert import tocube
 
 # read preprocessed data
 stage1 = read("cube_3/stage1.bin")
@@ -126,7 +127,7 @@ for i in range(18):
 def tonames(moves):
     return [movenames[move.hash()] for move in moves]
 
-
+"""
 n = 10
 for i in range(n):
     print("Test " + str(i) + ":")
@@ -137,3 +138,16 @@ for i in range(n):
     print(len(moves))
     c.applyall(moves)
     print(c)
+"""
+
+
+#colors = [1, 3, 3, 4, 0, 2, 5, 1, 4, 4, 3, 1, 3, 1, 5, 1, 0, 3, 2, 5, 0, 3, 2, 0, 0, 5, 4, 5, 2, 2, 5, 3, 2, 0, 0, 3, 5, 1, 1, 0, 4, 2, 2, 4, 4, 0, 1, 5, 4, 5, 1, 2, 4, 3]
+#colors = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+colors = [2, 0, 2, 2, 0, 2, 0, 2, 0, 3, 1, 1, 3, 1, 1, 3, 3, 1, 0, 2, 0, 0, 2, 0, 2, 0, 2, 3, 3, 1, 3, 3, 1, 3, 1, 1, 4, 5, 5, 4, 4, 5, 4, 5, 5, 4, 4, 5, 4, 5, 5, 4, 4, 5]
+c = tocube(colors)
+print(c)
+moves = solve(c)
+print(tonames(moves))
+print(len(moves))
+c.applyall(moves)
+print(c)
