@@ -29,12 +29,12 @@ def tocube(array):
             origin = triple_to_corner[(a, b, c)]
             corner[origin] = i
             cornerori[origin] = 0
-        elif (c, a, b) in triple_to_corner:
-            origin = triple_to_corner[(c, a, b)]
-            corner[origin] = i
-            cornerori[origin] = 1
         elif (b, c, a) in triple_to_corner:
             origin = triple_to_corner[(b, c, a)]
+            corner[origin] = i
+            cornerori[origin] = 1
+        elif (c, a, b) in triple_to_corner:
+            origin = triple_to_corner[(c, a, b)]
             corner[origin] = i
             cornerori[origin] = 2
         else:
@@ -55,11 +55,38 @@ def tocube(array):
             return None
     return Cube(corner, cornerori, edge, edgeori)
 
+def tocolors(cube):
+    array = [i // 9 for i in range(54)]
+    for i in range(8):
+        ori = cube.cornerori[i]
+        original = corner_to_triple[i]
+        current = corner_to_triple[cube.corner[i]]
+        for j in range(3):
+            array[current[(j + ori) % 3]] = original[j] // 9
+    for i in range(12):
+        ori = cube.edgeori[i]
+        original = edge_to_pair[i]
+        current = edge_to_pair[cube.edge[i]]
+        for j in range(2):
+            array[current[(j + ori) % 2]] = original[j] // 9
+    return array
+
+
+
 """
 colors = [i // 9 for i in range(54)]
 cube = tocube(colors)
 print(cube)
 """
-
+"""
 colors = [1, 3, 3, 4, 0, 2, 5, 1, 4, 4, 3, 1, 3, 1, 5, 1, 0, 3, 2, 5, 0, 3, 2, 0, 0, 5, 4, 5, 2, 2, 5, 3, 2, 0, 0, 3, 5, 1, 1, 0, 4, 2, 2, 4, 4, 0, 1, 5, 4, 5, 1, 2, 4, 3]
 c = tocube(colors)
+"""
+"""
+c = Cube.shuffled()
+print(c)
+colors = tocolors(c)
+print(colors)
+d = tocube(colors)
+print(d)
+#"""
