@@ -1,5 +1,5 @@
 from random import randint
-
+from permutation import rank, rank_sign, sign
 
 
 class Cube:
@@ -46,6 +46,17 @@ class Cube:
 
     def neighbours(self):
         return [self*move for move in Cube.moves]
+    
+    def hash(self):
+        a = rank(self.corner)
+        b = 0
+        for i in range(7):
+            b = 3 * b + self.cornerori[i]
+        c = rank_sign(self.edge, sign(self.corner))
+        d = 0
+        for i in range(11):
+            d = (d << 1) | self.edgeori[i]
+        return 2048*(239500800*(2187*a + b) + c) + d
 
     def __repr__(self):
         return str(self.corner) + ", " + str(self.cornerori) + ", " + str(self.edge) + ", " + str(self.edgeori)
@@ -76,6 +87,10 @@ Cube.R3 = Cube.R2 * Cube.R
 Cube.moves = [
     Cube.B, Cube.B2, Cube.B3, Cube.R, Cube.R2, Cube.R3, Cube.U, Cube.U2, Cube.U3, 
     Cube.F, Cube.F2, Cube.F3, Cube.L, Cube.L2, Cube.L3, Cube.D, Cube.D2, Cube.D3
+]
+
+Cube.names = [
+    "B", "B2", "B3", "R", "R2", "R3", "U", "U2", "U3", "F", "F2", "F3", "L", "L2", "L3", "D", "D2", "D3"
 ]
 
 
