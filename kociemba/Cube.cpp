@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Cube.h"
 #include "math/Permutation.h"
+#include "math/Combination.h"
 
 using namespace std;
 
@@ -141,7 +142,7 @@ int Cube::slice_coord(){
             coord |= 1 << i;
         }
     }
-    return coord;
+    return cmb::rank(12, 4, coord);
 }
 
 
@@ -153,7 +154,6 @@ Cube Cube::F(array<byte, 8>{1, 5, 2, 3, 0, 4, 6, 7}, array<byte, 8>{1, 2, 0, 0, 
 Cube Cube::B(array<byte, 8>{0, 1, 3, 7, 4, 5, 2, 6}, array<byte, 8>{0, 0, 1, 2, 0, 0, 2, 1}, array<byte, 12>{0, 1, 7, 3, 4, 5, 2, 10, 8, 9, 6, 11}, array<byte, 12>{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 Cube Cube::U(array<byte, 8>{0, 1, 2, 3, 5, 6, 7, 4}, array<byte, 8>{0, 0, 0, 0, 0, 0, 0, 0}, array<byte, 12>{0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 8}, array<byte, 12>{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 Cube Cube::D(array<byte, 8>{3, 0, 1, 2, 4, 5, 6, 7}, array<byte, 8>{0, 0, 0, 0, 0, 0, 0, 0}, array<byte, 12>{3, 0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11}, array<byte, 12>{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-//Cube Cube::L3(array<byte, 8>{3, 1, 2, 7, 0, 5, 6, 4}, array<byte, 8>{2, 0, 0, 1, 1, 0, 0, 2}, array<byte, 12>{0, 1, 2, 7, 3, 5, 6, 11, 8, 9, 10, 4}, array<byte, 12>{0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1});
 Cube Cube::L(array<byte, 8>{4, 1, 2, 0, 7, 5, 6, 3}, array<byte, 8>{2, 0, 0, 1, 1, 0, 0, 2}, array<byte, 12>{0, 1, 2, 4, 11, 5, 6, 3, 8, 9, 10, 7}, array<byte, 12>{0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1});
 Cube Cube::R(array<byte, 8>{0, 2, 6, 3, 4, 1, 5, 7}, array<byte, 8>{0, 1, 2, 0, 0, 2, 1, 0}, array<byte, 12>{0, 6, 2, 3, 4, 1, 9, 7, 8, 5, 10, 11}, array<byte, 12>{0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0});
 

@@ -15,37 +15,15 @@ namespace cmb{
             bin[n][n] = 1;
         }
     }
-    /*
+
     int rank(int n, int k, int comb){
         int rank = 0;
-        int i = 0;
-        while((1 << (n - i)) - 1 >= comb) i += 1;
-        printf("i = %d\n", i);
         int count = 0;
-        for(; i < n; ++i){
-            if(comb & (1 << (n - i - 1))){
-                count += 1;
-            }else{
-                rank += bin[i][count];
-                printf("i = %d, count = %d\n", i, count);
-            }
-        }
-        return rank;
-    }
-    */
-    int rank(int n, int k, int comb){
-        int rank = 0;
-        int i = 0;
-        //while(1 << i <= comb) i += 1;
-        //printf("i = %d\n", i);
-        int count = 0;
-        for(; i < n; ++i){
+        for(int i = 0; i < n; ++i){
             if(comb & (1 << i)){
                 count += 1;
                 rank += bin[i][count];
                 //printf("i = %d, count = %d\n", i, count);
-            }else{
-                
             }
         }
         return rank;
