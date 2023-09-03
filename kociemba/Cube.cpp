@@ -105,12 +105,12 @@ Cube Cube::inv(){
 
 
 
-// returns corner_coord
+// returns corner coordinate
 int Cube::corner_coord(){
     return perm::rank(corner);
 }
 
-// returns twist_coord in 'is replaced by' representation
+// returns twist coordinate in 'is replaced by' representation
 int Cube::twist_coord(){
     int coord = 0;
     for(int i = 0; i < 7; ++i){
@@ -119,16 +119,27 @@ int Cube::twist_coord(){
     return coord;
 }
 
-// returns edge_coord
+// returns edge coordinate
 int Cube::edge_coord(){
     return perm::rank(edge);
 }
 
-// returns flip_coord in 'is replaced by' representation
+// returns flip coordinate in 'is replaced by' representation
 int Cube::flip_coord(){
     int coord = 0;
     for(int i = 0; i < 11; ++i){
         coord = (coord << 1) | flip[i];
+    }
+    return coord;
+}
+
+// returns slice coordinate in 'is replaced by' representation
+int Cube::slice_coord(){
+    int coord = 0;
+    for(int i = 0; i < 11; ++i){
+        if(4 <= edge[i] && edge[i] <= 7){
+            coord |= 1 << i;
+        }
     }
     return coord;
 }
