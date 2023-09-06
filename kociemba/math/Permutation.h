@@ -5,7 +5,7 @@
 
 
 namespace perm{
-    std::array<int, 13> fact = {0, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600};
+    static std::array<int, 13> fact = {0, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600};
 
     // returns the rank of the perm[i,...,n-1] on set
     template<size_t n>
