@@ -128,7 +128,7 @@ int Cube::edge_coord(){
 // returns flip coordinate in 'is replaced by' representation
 int Cube::flip_coord(){
     int coord = 0;
-    for(int i = 0; i < 11; ++i){
+    for(int i = 11; i >= 0; --i){
         coord = (coord << 1) | flip[i];
     }
     return coord;
@@ -143,6 +143,11 @@ int Cube::slice_coord(){
         }
     }
     return cmb::rank(12, 4, coord);
+}
+
+// returns flipslice coordinate in 'is replaced by' representation
+int Cube::flipslice_coord(){
+    return 495 * flip_coord() + slice_coord();
 }
 
 

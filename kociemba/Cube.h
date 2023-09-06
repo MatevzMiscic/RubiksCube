@@ -36,6 +36,7 @@ class Cube{
     int edge_coord();
     int flip_coord();
     int slice_coord();
+    int flipslice_coord();
 
     void print();
 };
