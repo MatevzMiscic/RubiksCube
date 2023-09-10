@@ -32,7 +32,7 @@ std::array<short, 18*2187> twist_movetable(){
                 result[k] = (Cube::moves[j].twist[k] + twist[Cube::moves[j].corner[k]]) % 3;
             }
             // find twist coordinates of the product
-            movetable[18*i + j] = twist_coord(result);
+            movetable[18*i + j] = short(twist_coord(result));
         }
         // calculate twist for next coordinates
         for(int k = 6; k >= 0; --k){
@@ -48,37 +48,6 @@ std::array<short, 18*2187> twist_movetable(){
     }
     return movetable;
 }
-
-
-
-
-
-
-
-// returns flipslice coordinate
-int flipslice_coord(int flip, int slice){
-    return 0;
-}
-
-
-
-// conjugates some representative of given flip and slice coordinates and saves its flip and slice coordinates
-// warning: this can depend on the chosen representative, it is user responsibility that all representatives give the same answer 
-void conj_flipslice(int& flip, int& slice, Cube& cube){
-    std::array<byte, 12> edge;
-    int slice_edge = 7;
-    int non_slice_edge = 0;
-    for(int i = 0; i < 12; ++i){
-        if(slice & (1 << i)){
-            edge[i] = slice_edge;
-            slice_edge += 1;
-        }else{
-            edge[i] = non_slice_edge;
-            non_slice_edge += 1;
-        }
-    }
-}
-
 
 
 
@@ -141,6 +110,11 @@ class EdgeFlip{
     }
 
     
+    // returns the coordinate that uniquly defines this EdgeFlip
+    inline ll coord(){
+        return (ll(edge_coord()) << 11) | flip_coord();
+    }
+
     // returns edge coordinate
     inline int edge_coord(){
         return perm::rank(edge);
@@ -167,7 +141,84 @@ class EdgeFlip{
         return (slice_coord() << 11) | flip_coord();
     }
 
+    void print(){
+        std::printf("(");
+        for(byte c : edge) printf("%d ", c);
+        std::printf("), (");
+        for(int i = 0; i < 12; ++i) printf("%d ", ((1 << i) & flip) >> i);
+        std::printf(")\n");
+    }
 };
+
+
+
+void printbin(int n){
+    for(int i = 0; i < 12; ++i){
+        if(n & (1 << i)){
+            printf("1 ");
+        }else{
+            printf("0 ");
+        }
+    }
+    printf("\n");
+}
+
+
+// returns move table for flip coordinate
+std::array<short, 18*2048> flip_movetable(){
+    std::array<short, 18*2048> movetable;
+    // go through all 2048 flip coordinates
+    for(int i = 0; i < 2048; ++i){
+        //printf("par: %d\n", __builtin_parity(i));
+        int flip = i | (__builtin_parity(i) << 11);
+        // go through all 18 moves
+        for(int j = 0; j < 18; ++j){
+            // calculate the product
+            int result = 0;
+            for(int k = 0; k < 12; ++k){
+                result |= ((Cube::moves[j].flip[k] ^ (flip >> Cube::moves[j].edge[k])) & 1) << k;
+            }
+            //save to move table
+            movetable[18*i + j] = short(result & 2047);
+        }
+    }
+    return movetable;
+}
+
+
+
+
+
+// returns move table for slice coordinate
+std::array<short, 18*495> slice_movetable(){
+    std::array<short, 18*495> movetable;
+    // go through all 495 slice coordinates
+    int slice_coord = 0;
+    for(int slice = 0; slice < 4096; ++slice){
+        if(__builtin_popcount(slice) != 4){
+            continue;
+        }
+        // go through all 18 moves
+        for(int j = 0; j < 18; ++j){
+            // calculate the product
+            int result = 0;
+            for(int k = 0; k < 12; ++k){
+                if(slice & (1 << Cube::moves[j].edge[k])){
+                    result |= 1 << k;
+                }
+            }
+            movetable[18*slice_coord + j] = short(cmb::rank(12, 4, result));
+        }
+        slice_coord += 1;
+    }
+    return movetable;
+}
+
+
+
+
+
+
 
 
 
@@ -184,12 +235,15 @@ int countbits(int num, int n){
 
 int representative(EdgeFlip& a){
     std::array<EdgeFlip, 16> symmetries;
-    sym::compute();
+    //sym::compute();
     for(int i = 0; i < 16; ++i){
         symmetries[i] = EdgeFlip(sym::symmetries[i]);
     }
+    //ll repr = a.coord();
     int repr = 1e9;
     for(EdgeFlip& s : symmetries){
+        //(s.inv() * a * s).print();
+        //ll coord = (s.inv() * a * s).coord();
         int coord = (s.inv() * a * s).flipslice_coord();
         if(coord < repr){
             repr = coord;
@@ -201,7 +255,7 @@ int representative(EdgeFlip& a){
 std::array<int, 100000> represent_table(){
     int count = 0; // counts the number of equivalence classes
     std::array<int, 100000> represents = {}; // flipslice coordinates of representatives
-    std::unordered_set<int> set; // stores flipslice coordinates of elements of classes whose representatives were already found
+    std::unordered_set<ll> set; // stores coordinates of elements of classes whose representatives were already found
     // compute symmetries
     std::array<EdgeFlip, 16> symmetries;
     sym::compute();
@@ -212,7 +266,7 @@ std::array<int, 100000> represent_table(){
     int slice_coord = 0;
     for(int slice = 0; slice < 2048; ++slice){
 
-        printf("%d\n", slice);
+        if(slice % 20 == 0) std::printf("%d / 100\n", slice / 20);
 
         if(countbits(slice, 12) != 4){
             continue;
@@ -228,6 +282,7 @@ std::array<int, 100000> represent_table(){
             }else{
                 edge[i] = non_slice_edge;
                 non_slice_edge += 1;
+                if(non_slice_edge == 4) non_slice_edge = 8;
             }
         }
         // go through all flips
@@ -236,16 +291,17 @@ std::array<int, 100000> represent_table(){
             int flip = flip_coord | (parity << 11);
             int flipslice = (slice_coord << 11) | flip_coord;
             // if this equivalence class was already found continue
-            if(set.find(flipslice) != set.end()){
+            EdgeFlip repr(edge, flip);
+            if(set.find(repr.coord()) != set.end()){
                 continue;
             }
             // else find representative of a class
-            EdgeFlip repr(edge, flip);
             for(EdgeFlip& s : symmetries){
-                int coord = (s.inv() * repr * s).flipslice_coord();
-                set.insert(coord);
-                if(coord < flipslice){
-                    flipslice = coord;
+                EdgeFlip sym = s.inv() * repr * s;
+                int flipslice_sym = sym.flipslice_coord();
+                set.insert(sym.coord());
+                if(flipslice_sym < flipslice){
+                    flipslice = flipslice_sym;
                 }
             }
             represents[count] = flipslice;
@@ -253,6 +309,6 @@ std::array<int, 100000> represent_table(){
         }
         slice_coord += 1;
     }
-    printf("count = %d\n", count);
+    std::printf("count = %d\n", count);
     return represents;
 }
