@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstdlib>
 #include "Cube.h"
 #include "math/Permutation.h"
 #include "math/Combination.h"
@@ -25,6 +26,16 @@ Cube::Cube(const array<byte, 8>& corner, const array<byte, 8>& twist, const arra
     this->twist = twist;
     this->edge = edge;
     this->flip = flip;
+}
+
+
+
+
+// returns a shuffled cube
+void Cube::shuffle(){
+    for(int i = 0; i < 50; ++i){
+        (*this) *= Cube::moves[rand() % 18];
+    }
 }
 
 
@@ -128,8 +139,8 @@ int Cube::edge_coord(){
 // returns flip coordinate in 'is replaced by' representation
 int Cube::flip_coord(){
     int coord = 0;
-    for(int i = 11; i >= 0; --i){
-        coord = (coord << 1) | flip[i];
+    for(int i = 0; i < 11; ++i){
+        coord |= flip[i] << i;
     }
     return coord;
 }
@@ -137,7 +148,7 @@ int Cube::flip_coord(){
 // returns slice coordinate in 'is replaced by' representation
 int Cube::slice_coord(){
     int coord = 0;
-    for(int i = 0; i < 11; ++i){
+    for(int i = 0; i < 12; ++i){
         if(4 <= edge[i] && edge[i] <= 7){
             coord |= 1 << i;
         }
