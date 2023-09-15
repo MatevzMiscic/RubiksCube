@@ -1,8 +1,10 @@
 #include <iostream>
 #include <array>
+#include <vector>
 #include <deque>
 #include "../Settings.h"
 #include "../moves/moves.h"
+#include "../io/io.h"
 
 using namespace std;
 
@@ -16,9 +18,9 @@ struct coord{
     // in the least significant 9 bits slice coordinate is stored
     // in the next 12 bits twist coordinate is stored
     // in the next 11 bits flip coordinate is stored
-    int val;
+    uint val;
     
-    coord(int val){
+    coord(uint val){
         this->val = val;
     }
     coord(int slice, int twist, int flip){
@@ -102,11 +104,12 @@ struct table{
         }
     }
 
-    inline int get(int index){
+    inline int get(uint index){
+        //cout << index << "\n";
         return (bits[index >> 4] >> ((index & 15) << 1)) & 3;
     }
 
-    inline void set(int index, int val){
+    inline void set(uint index, int val){
         int shift = (index & 15) << 1;
         bits[index >> 4] &= ~(3 << shift);
         bits[index >> 4] |= val << shift;
@@ -127,46 +130,54 @@ void pruning_table(table& arr){
     coord::compute_mts();
     printf("Move table calculated.\n");
 
-    arr.fill(3);
-    printf("Table filled.\n");
-
     int distance = 0;
     Cube id;
     coord goal(id);
     deque<coord> queue = {goal};
-    int index = goal.index();
-    arr.set(index, 0);
+    arr.set(goal.index(), 0);
 
     int count = 0;
+
+    int d2 = 0;
 
     while(!queue.empty()){
         count += 1;
         coord u = queue.front();
         queue.pop_front();
-        int index_u = u.index();
+        uint index_u = u.index();
+
+        
+        int dm3 = arr.get(index_u);
+        if(d2 % 3 != dm3){
+            printf("dist %d: count %d\n", d2, count-1);
+            d2 += 1;
+            count = 1;
+            //if(d2 == 7) break;
+        }
+
         int dist = arr.get(index_u) + 1;
         if(dist == 3) dist = 0;
         if(distance % 3 != dist){
             distance += 1;
             //printf("dist: %d, distance: %d\n", dist, distance);
-            if(distance == 4) break;
+            //if(distance == 7) break;
         }
-        printf("u = %d, dist = %d\n", index_u, distance-1);
+        //printf("u = %d, dist = %d\n", index_u, distance-1);
         for(int i = 0; i < 18; ++i){
             coord v = u.neigh(i);
-            int index = v.index();
+            uint index = v.index();
             if(arr.get(index) == 3){
-                printf("  node %d found\n", index);
+                //printf("  node %d found\n", index);
                 arr.set(index, dist);
-                queue.push_back(v);
+                if(distance < 8) queue.push_back(v);
             }
         }
     }
-    printf("count = %d\n", count-1);
+    printf("count = %d\n", count);
 }
 
 
-int idx(Cube& cube){
+uint idx(Cube& cube){
     return 2187 * ((cube.slice_coord() << 11) | cube.flip_coord()) + cube.twist_coord();
 }
 
@@ -181,8 +192,7 @@ void pruning_table2(table& arr){
     int distance = 0;
     Cube id;
     deque<Cube> queue = {id};
-    int index = idx(id);
-    arr.set(index, 0);
+    arr.set(idx(id), 0);
 
     int count = 0;
 
@@ -190,7 +200,7 @@ void pruning_table2(table& arr){
         count += 1;
         Cube u = queue.front();
         queue.pop_front();
-        int index_u = idx(u);
+        uint index_u = idx(u);
         int dist = arr.get(index_u) + 1;
         if(dist == 3) dist = 0;
         if(distance % 3 != dist){
@@ -201,9 +211,9 @@ void pruning_table2(table& arr){
         printf("u = %d, dist = %d\n", index_u, distance-1);
         for(int i = 0; i < 18; ++i){
             Cube v = neigh(u, i);
-            int index = idx(v);
+            uint index = idx(v);
             if(arr.get(index) == 3){
-                printf("  node %d found\n", index);
+                //printf("  node %d found\n", index);
                 arr.set(index, dist);
                 queue.push_back(v);
             }
@@ -215,19 +225,132 @@ void pruning_table2(table& arr){
 
 
 
+
+void pruning_table3(table& arr, int start, int end){
+    std::array<short, 18*2187> twistmt = twist_movetable();
+    std::array<short, 18*2048> flipmt = flip_movetable();
+    std::array<short, 18*495> slicemt = slice_movetable();
+    printf("Move table calculated.\n");
+
+    int distance = 0;
+
+    Cube id;
+    coord goal(id);
+    arr.set(goal.index(), 0);
+
+    for(int d = start; d <= end; ++d){
+        int prev = (d + 2) % 3;
+        int dist = d % 3;
+        printf("prev = %d, dist = %d\n", prev, dist);
+        uint i = 0;
+        for(uint slice = 0; slice < 495; ++slice){
+            if(slice % 5 == 0) printf("%d / 100\n", slice / 5);
+            for(uint flip = 0; flip < 2048; ++flip){
+                for(uint twist = 0; twist < 2187; ++twist){
+                    if(arr.get(i) == prev){
+                        for(int j = 0; j < 18; ++j){
+                            uint index = 2187 * ((slicemt[18*slice + j] << 11) | flipmt[18*flip + j]) + twistmt[18*twist + j];
+                            if(arr.get(index) == 3){
+                                arr.set(index, dist);
+                                //printf("found node %d\n", index);
+                            }
+                        }
+                    }
+                    i += 1;
+                }
+            }
+        }
+    }
+}
+
+
+
+
+void pruning_table4(table& arr, int start, int end){
+    std::array<short, 18*2187> twistmt = twist_movetable();
+    std::array<short, 18*2048> flipmt = flip_movetable();
+    std::array<short, 18*495> slicemt = slice_movetable();
+    printf("Move table calculated.\n");
+
+    int distance = 0;
+
+    Cube id;
+    coord goal(id);
+    arr.set(goal.index(), 0);
+    printf("goal: %d, dist: %d\n\n", goal.index(), arr.get(goal.index()));
+
+    for(int d = start; d <= end; ++d){
+        int prev = (d + 2) % 3;
+        int dist = d % 3;
+        uint i = 0;
+        for(uint slice = 0; slice < 495; ++slice){
+            if(slice % 5 == 0) printf("%d / 100\n", slice / 5);
+            for(uint flip = 0; flip < 2048; ++flip){
+                for(uint twist = 0; twist < 2187; ++twist){
+                    /*
+                    if(i != 2187 * ((slice << 11) | flip) + twist){
+                        printf("i = %d, idx = %d\n", i, 2187 * ((slice << 11) | flip) + twist);
+                    }
+                    */
+                    //*
+                    if(arr.get(i) == 3){
+                        for(int j = 0; j < 18; ++j){
+                            uint index = 2187 * ((slicemt[18*slice + j] << 11) | flipmt[18*flip + j]) + twistmt[18*twist + j];
+                            if(arr.get(index) == prev){
+                                arr.set(i, dist);
+                                //printf("found node %d\n", i);
+                                continue;
+                            }
+                        }
+                    }
+                    //*/
+                    i += 1;
+                }
+            }
+        }
+    }
+}
+
+
+
+vector<int> solve(Cube& cube, table& arr){
+    vector<int> moves;
+    coord c(cube);
+    bool run = true;
+    while(run){
+        run = false;
+        int dist = (arr.get(c.index()) + 2) % 3;
+        printf("c = %d, dist = %d, sl: %d, fl; %d, tw: %d\n", c.index(), arr.get(c.index()), c.slice(), c.flip(), c.twist());
+        for(int i = 0; i < 18; ++i){
+            coord d = c.neigh(i);
+            if(arr.get(d.index()) == dist){
+                printf("move %d\n", i);
+                moves.push_back(i);
+                run = true;
+                c = d;
+                break;
+            }
+        }
+    }
+    return moves;
+}
+
+
 int main(){
     cmb::calcbin();
-    //table arr(554273280);
     table arr(2217093120);
-    pruning_table2(arr);
+    arr.fill(3);
+    printf("Table filled.\n");
+    pruning_table(arr);
+    pruning_table3(arr, 9, 10);
+    pruning_table4(arr, 11, 12);
+    io::write("stage1.bin", arr.bits, (arr.len + 3) / 4);
+    
+
+    // testing
     /*
-    coord::compute_mts();
-    Cube id;
-    coord a(id);
-    coord b = a.neigh(1);
-    a.print();
-    a.neigh(0).print();
-    b.print();
-    //printf("index: %d\n", b.index());
-    */
+    Cube c;
+    c *= Cube::L * Cube::F * Cube::R * Cube::F;
+    solve(c, arr);
+    //*/
 }
