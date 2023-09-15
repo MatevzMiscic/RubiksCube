@@ -12,20 +12,20 @@ namespace io{
 
     template<size_t n>
     bool read(std::string filename, std::array<byte, n>& data){
-        std::ifstream file(filename, std::ios::out | std::ios::binary);
+        std::ifstream file(filename, std::ios::in | std::ios::binary);
         if(!file){
-        return false;
+            return false;
         }
         file.read((char*)&(data[0]), n);
         file.close();
         if(!file.good()){
-        return false;
+            return false;
         }
         return true;
     }
 
     template<size_t n>
-    int write(std::string filename, std::array<byte, n>& data){
+    bool write(std::string filename, std::array<byte, n>& data){
         std::ofstream file(filename, std::ios::out | std::ios::binary);
         if(!file){
             return false;
@@ -37,5 +37,8 @@ namespace io{
         }
         return true;
     }
+
+    bool read(std::string filename, int* data, int n);
+    bool write(std::string filename, int* data, int n);
 
 }
