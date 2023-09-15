@@ -9,17 +9,17 @@ namespace perm{
 
     // returns the rank of the perm[i,...,n-1] on set
     template<size_t n>
-    int rank_helper(const std::array<byte, n>& perm, int i, Set& set){
+    uint rank_helper(const std::array<byte, n>& perm, int i, Set& set){
         if(i >= n - 1) return 0;
-        int a = set.rank(perm[i]);
+        uint a = set.rank(perm[i]);
         set.del(perm[i]);
-        int b = rank_helper(perm, i + 1, set);
+        uint b = rank_helper(perm, i + 1, set);
         return a * fact[n - 1 - i] + b;
     }
 
     // returns the lexicographic rank of the given permutation of integers 0, 1,...,n-1
     template<size_t n>
-    int rank(const std::array<byte, n>& perm){
+    uint rank(const std::array<byte, n>& perm){
         Set set(n);
         return rank_helper(perm, 0, set);
     }
