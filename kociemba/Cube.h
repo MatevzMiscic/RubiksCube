@@ -33,12 +33,12 @@ class Cube{
 
     Cube inv();
 
-    int corner_coord();
-    int twist_coord();
-    int edge_coord();
-    int flip_coord();
-    int slice_coord();
-    int flipslice_coord();
+    uint corner_coord();
+    uint twist_coord();
+    uint edge_coord();
+    uint flip_coord();
+    uint slice_coord();
+    uint flipslice_coord();
 
     void print();
 };
