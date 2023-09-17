@@ -5,15 +5,16 @@
 #include "../Settings.h"
 #include "../moves/moves.h"
 #include "../io/io.h"
+#include "table.h"
 
 using namespace std;
 
 
 struct coord{
 
-    static std::array<short, 18*2187> twistmt;
-    static std::array<short, 18*2048> flipmt;
-    static std::array<short, 18*495> slicemt;
+    static std::vector<ushort> twistmt;
+    static std::vector<ushort> flipmt;
+    static std::vector<ushort> slicemt;
 
     // in the least significant 9 bits slice coordinate is stored
     // in the next 12 bits twist coordinate is stored
@@ -59,9 +60,9 @@ struct coord{
     }
 };
 
-std::array<short, 18*2187> coord::twistmt;
-std::array<short, 18*2048> coord::flipmt;
-std::array<short, 18*495> coord::slicemt;
+std::vector<ushort> coord::twistmt;
+std::vector<ushort> coord::flipmt;
+std::vector<ushort> coord::slicemt;
 
 
 
@@ -78,50 +79,6 @@ void printb(int n){
 }
 
 
-struct table{
-    // table of length len, where all each entry has two bits
-
-    ll len;
-    int* bits;
-    
-    table(ll n){
-        len = n;
-        bits = new int[n/16 + 1];
-    }
-    ~table(){
-        delete[] bits;
-    }
-
-    void fill(int a){
-        int flag = 0;
-        for(int i = 0; i < 16; ++i){
-            flag = (flag << 2) | a;
-        }
-        //printb(a);
-        //printb(flag);
-        for(int i = 0; i < len/16 + 1; ++i){
-            bits[i] = flag;
-        }
-    }
-
-    inline int get(uint index){
-        //cout << index << "\n";
-        return (bits[index >> 4] >> ((index & 15) << 1)) & 3;
-    }
-
-    inline void set(uint index, int val){
-        int shift = (index & 15) << 1;
-        bits[index >> 4] &= ~(3 << shift);
-        bits[index >> 4] |= val << shift;
-    }
-
-    void print(){
-        for(int i = 0; i < len; ++i){
-            printf("%d ", get(i));
-        }
-        printf("\n");
-    }
-};
 
 
 
@@ -227,9 +184,9 @@ void pruning_table2(table& arr){
 
 
 void pruning_table3(table& arr, int start, int end){
-    std::array<short, 18*2187> twistmt = twist_movetable();
-    std::array<short, 18*2048> flipmt = flip_movetable();
-    std::array<short, 18*495> slicemt = slice_movetable();
+    std::vector<ushort> twistmt = twist_movetable();
+    std::vector<ushort> flipmt = flip_movetable();
+    std::vector<ushort> slicemt = slice_movetable();
     printf("Move table calculated.\n");
 
     int distance = 0;
@@ -267,9 +224,9 @@ void pruning_table3(table& arr, int start, int end){
 
 
 void pruning_table4(table& arr, int start, int end){
-    std::array<short, 18*2187> twistmt = twist_movetable();
-    std::array<short, 18*2048> flipmt = flip_movetable();
-    std::array<short, 18*495> slicemt = slice_movetable();
+    std::vector<ushort> twistmt = twist_movetable();
+    std::vector<ushort> flipmt = flip_movetable();
+    std::vector<ushort> slicemt = slice_movetable();
     printf("Move table calculated.\n");
 
     int distance = 0;
