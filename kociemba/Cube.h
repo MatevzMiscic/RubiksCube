@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <vector>
 #include "Settings.h"
 
 
@@ -27,6 +28,7 @@ class Cube{
     Cube(const std::array<byte, 8>& corner, const std::array<byte, 8>& twist, const std::array<byte, 12>& edge, const std::array<byte, 12>& flip);
 
     void shuffle();
+    void shuffle(std::vector<int>& index);
 
     void operator*=(const Cube& cube);
     Cube operator*(const Cube& cube);

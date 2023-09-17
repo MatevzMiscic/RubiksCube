@@ -31,10 +31,19 @@ Cube::Cube(const array<byte, 8>& corner, const array<byte, 8>& twist, const arra
 
 
 
-// returns a shuffled cube
+// shuffles the cube
 void Cube::shuffle(){
     for(int i = 0; i < 50; ++i){
         (*this) *= Cube::moves[rand() % 18];
+    }
+}
+
+
+// shuffles the cube
+void Cube::shuffle(vector<int>& index){
+    int n = index.size();
+    for(int i = 0; i < 50; ++i){
+        (*this) *= Cube::moves[index[rand() % n]];
     }
 }
 
