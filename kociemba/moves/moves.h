@@ -2,11 +2,15 @@
 
 #include <array>
 #include <unordered_set>
+#include <algorithm>
 #include "../Settings.h"
 #include "../Cube.h"
 #include "../Symmetries.h"
 #include "../math/Combination.h"
 #include "../math/Permutation.h"
+
+
+
 
 
 // returns coordinate of the twist
@@ -19,8 +23,8 @@ int twist_coord(std::array<byte, 8>& twist){
 }
 
 // returns move table for twist coordinate
-std::array<short, 18*2187> twist_movetable(){
-    std::array<short, 18*2187> movetable;
+std::vector<ushort> twist_movetable(){
+    std::vector<ushort> movetable(18*2187);
     std::array<byte, 8> twist = {};
     std::array<byte, 8> result = {};
     // go through all 2187 possible twist coordinates
@@ -48,6 +52,145 @@ std::array<short, 18*2187> twist_movetable(){
     }
     return movetable;
 }
+
+
+
+
+
+// returns move table for flip coordinate
+std::vector<ushort> flip_movetable(){
+    std::vector<ushort> movetable(18*2048);
+    // go through all 2048 flip coordinates
+    for(int i = 0; i < 2048; ++i){
+        //printf("par: %d\n", __builtin_parity(i));
+        int flip = i | (__builtin_parity(i) << 11);
+        // go through all 18 moves
+        for(int j = 0; j < 18; ++j){
+            // calculate the product
+            int result = 0;
+            for(int k = 0; k < 12; ++k){
+                result |= ((Cube::moves[j].flip[k] ^ (flip >> Cube::moves[j].edge[k])) & 1) << k;
+            }
+            //save to move table
+            movetable[18*i + j] = ushort(result & 2047);
+        }
+    }
+    return movetable;
+}
+
+
+
+
+
+// returns move table for slice coordinate
+std::vector<ushort> slice_movetable(){
+    std::vector<ushort> movetable(18*495);
+    // go through all 495 slice coordinates
+    int slice_coord = 0;
+    for(int slice = 0; slice < 4096; ++slice){
+        if(__builtin_popcount(slice) != 4){
+            continue;
+        }
+        // go through all 18 moves
+        for(int j = 0; j < 18; ++j){
+            // calculate the product
+            int result = 0;
+            for(int k = 0; k < 12; ++k){
+                if(slice & (1 << Cube::moves[j].edge[k])){
+                    result |= 1 << k;
+                }
+            }
+            movetable[18*slice_coord + j] = ushort(cmb::rank(12, 4, result));
+        }
+        slice_coord += 1;
+    }
+    return movetable;
+}
+
+
+
+
+
+
+
+// returns move table for corner coordinate
+std::vector<ushort> corner_movetable(){
+    std::array<int, 10> index = {2, 3, 6, 7, 8, 9, 10, 11, 14, 15};
+    std::vector<ushort> movetable(18*40320);
+    std::array<byte, 8> perm = {0, 1, 2, 3, 4, 5, 6, 7};
+    std::array<byte, 8> result;
+    int coord = 0;
+    do{
+        for(int i = 0; i < 10; ++i){
+            for(int j = 0; j < 8; ++j){
+                result[j] = perm[Cube::moves[index[i]].corner[j]];
+            }
+            movetable[18*coord + i] = ushort(perm::rank(result));
+        }
+        coord += 1;
+    }while(next_permutation(perm.begin(), perm.end()));
+    return movetable;
+}
+
+
+
+
+
+
+
+
+
+
+inline int out(int a){
+    if(a < 4) return a;
+    return a - 4;
+}
+
+// returns move table for corner coordinate (size = 10*967680)
+std::vector<uint> layers_movetable(){
+    std::array<int, 10> index = {2, 3, 6, 7, 8, 9, 10, 11, 14, 15};
+    std::vector<uint> movetable(10*967680);
+    std::array<byte, 4> slice = {4, 5, 6, 7};
+    std::array<byte, 8> ud = {0, 1, 2, 3, 8, 9, 10, 11};
+    std::array<byte, 12> edge;
+    std::array<byte, 12> result;
+    std::array<byte, 4> slice_result;
+    std::array<byte, 8> ud_result;
+    int ud_coord = 0;
+    int slice_coord = 0; // not the real slice coord
+    do{
+        slice_coord = 0;
+        do{
+            for(int i = 0; i < 4; ++i) edge[i] = ud[i];
+            for(int i = 0; i < 4; ++i) edge[i + 4] = slice[i];
+            for(int i = 0; i < 4; ++i) edge[i + 8] = ud[i + 4];
+            //for(byte a : edge) printf("%d, ", a);
+            //printf("\n");
+            for(int j = 0; j < 10; ++j){
+                for(int i = 0; i < 12; ++i){
+                    result[i] = edge[Cube::moves[index[j]].edge[i]];
+                }
+                for(int i = 0; i < 4; ++i) ud_result[i] = out(result[i]);
+                for(int i = 0; i < 4; ++i) slice_result[i] = result[i + 4] - 4;
+                for(int i = 0; i < 4; ++i) ud_result[i + 4] = out(result[i + 8]);
+                movetable[10*(24*ud_coord + slice_coord) + j] = 24*perm::rank(ud_result) + perm::rank(slice_result);
+            }
+            slice_coord += 1;
+        }while(next_permutation(slice.begin(), slice.end()));
+        ud_coord += 1;
+        if(ud_coord % 403 == 0) printf("%d / 100\n", ud_coord / 403);
+    }while(next_permutation(ud.begin(), ud.end()));
+    return movetable;
+}
+
+
+
+
+
+
+
+
+
 
 
 
@@ -162,64 +305,6 @@ void printbin(int n){
     }
     printf("\n");
 }
-
-
-// returns move table for flip coordinate
-std::array<short, 18*2048> flip_movetable(){
-    std::array<short, 18*2048> movetable;
-    // go through all 2048 flip coordinates
-    for(int i = 0; i < 2048; ++i){
-        //printf("par: %d\n", __builtin_parity(i));
-        int flip = i | (__builtin_parity(i) << 11);
-        // go through all 18 moves
-        for(int j = 0; j < 18; ++j){
-            // calculate the product
-            int result = 0;
-            for(int k = 0; k < 12; ++k){
-                result |= ((Cube::moves[j].flip[k] ^ (flip >> Cube::moves[j].edge[k])) & 1) << k;
-            }
-            //save to move table
-            movetable[18*i + j] = short(result & 2047);
-        }
-    }
-    return movetable;
-}
-
-
-
-
-
-// returns move table for slice coordinate
-std::array<short, 18*495> slice_movetable(){
-    std::array<short, 18*495> movetable;
-    // go through all 495 slice coordinates
-    int slice_coord = 0;
-    for(int slice = 0; slice < 4096; ++slice){
-        if(__builtin_popcount(slice) != 4){
-            continue;
-        }
-        // go through all 18 moves
-        for(int j = 0; j < 18; ++j){
-            // calculate the product
-            int result = 0;
-            for(int k = 0; k < 12; ++k){
-                if(slice & (1 << Cube::moves[j].edge[k])){
-                    result |= 1 << k;
-                }
-            }
-            movetable[18*slice_coord + j] = short(cmb::rank(12, 4, result));
-        }
-        slice_coord += 1;
-    }
-    return movetable;
-}
-
-
-
-
-
-
-
 
 
 
