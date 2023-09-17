@@ -207,3 +207,9 @@ cython_debug/
 
 # large files
 stage1.bin
+
+# move tables
+*.move
+
+# testing
+test.cpp
