@@ -26,9 +26,22 @@ namespace perm{
 
     // returns product of permutations a and b where a is applied first
     template<size_t n>
-    std::array<byte, n> mul(std::array<byte, n>& a, std::array<byte, n>& b){
+    std::array<byte, n> mul(const std::array<byte, n>& a, const std::array<byte, n>& b){
         std::array<byte, n> c;
         for(int i = 0; i < n; ++i) c[i] = b[a[i]];
         return c;
     }
+
+    // returns inverse of permutation a
+    template<size_t n>
+    std::array<byte, n> inv(const std::array<byte, n>& a){
+        std::array<byte, n> b;
+        for(int i = 0; i < 8; ++i){
+            b[a[i]] = i;
+        }
+        return b;
+    }
+
+
+    
 }
