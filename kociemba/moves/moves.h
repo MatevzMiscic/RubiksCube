@@ -5,7 +5,7 @@
 #include <algorithm>
 #include "../Settings.h"
 #include "../Cube.h"
-#include "../Symmetries.h"
+#include "../Symmetry/Symmetries.h"
 #include "../math/Combination.h"
 #include "../math/Permutation.h"
 
@@ -116,7 +116,7 @@ std::vector<ushort> slice_movetable(){
 // returns move table for corner coordinate
 std::vector<ushort> corner_movetable(){
     std::array<int, 10> index = {2, 3, 6, 7, 8, 9, 10, 11, 14, 15};
-    std::vector<ushort> movetable(18*40320);
+    std::vector<ushort> movetable(10*40320);
     std::array<byte, 8> perm = {0, 1, 2, 3, 4, 5, 6, 7};
     std::array<byte, 8> result;
     int coord = 0;
@@ -125,7 +125,7 @@ std::vector<ushort> corner_movetable(){
             for(int j = 0; j < 8; ++j){
                 result[j] = perm[Cube::moves[index[i]].corner[j]];
             }
-            movetable[18*coord + i] = ushort(perm::rank(result));
+            movetable[10*coord + i] = ushort(perm::rank(result));
         }
         coord += 1;
     }while(next_permutation(perm.begin(), perm.end()));
