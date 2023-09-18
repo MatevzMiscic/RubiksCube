@@ -1,8 +1,8 @@
 #pragma once
 
 #include <array>
-#include "Cube.h"
-#include "Settings.h"
+#include "../Cube.h"
+#include "../Settings.h"
 
 using namespace std;
 
@@ -22,6 +22,7 @@ namespace sym{
     Cube reflect(array<byte, 8>{1, 0, 3, 2, 5, 4, 7, 6}, array<byte, 8>{3, 3, 3, 3, 3, 3, 3, 3}, array<byte, 12>{0, 3, 2, 1, 5, 4, 7, 6, 8, 11, 10, 9}, array<byte, 12>{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 
     array<Cube, 16> symmetries;
+    array<Cube, 16> symmetries_inv;
 
     // fills the symmetries array
     void compute(){
@@ -35,6 +36,9 @@ namespace sym{
                 b *= quarturn;
             }
             a *= halfturn;
+        }
+        for(int i = 0; i < 16; ++i){
+            symmetries_inv[i] = symmetries[i].inv();
         }
     }
 
