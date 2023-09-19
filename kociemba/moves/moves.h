@@ -5,7 +5,7 @@
 #include <algorithm>
 #include "../Settings.h"
 #include "../Cube.h"
-#include "../Symmetry/Symmetries.h"
+#include "../Symmetry/symmetry.h"
 #include "../math/Combination.h"
 #include "../math/Permutation.h"
 
@@ -137,6 +137,44 @@ std::vector<ushort> corner_movetable(){
 
 
 
+// returns move table for corner symmetric coordinate
+std::vector<ushort> corner_sym_movetable(){
+    std::vector<ushort> mt = corner_movetable();
+    std::vector<ushort> sym_to_raw;
+    std::vector<ushort> raw_to_sym;
+    sym::corner_conversion(sym_to_raw, raw_to_sym);
+    std::vector<ushort> movetable(10*16*2768);
+    for(int coord = 0; coord < 16*2768; ++coord){
+        for(int i = 0; i < 10; ++i){
+            movetable[10*coord + i] = raw_to_sym[mt[10*sym_to_raw[coord] + i]];
+        }
+    }
+    return movetable;
+}
+
+
+
+
+
+// returns move table for corner symetry class coordinate
+std::vector<ushort> corner_cls_movetable(){
+    std::vector<ushort> mt = corner_sym_movetable();
+    std::vector<ushort> movetable(10*2768);
+    for(int coord = 0; coord < 2768; ++coord){
+        for(int i = 0; i < 10; ++i){
+            movetable[10*coord + i] = mt[10*(coord << 4) + i] >> 4;
+        }
+    }
+    return movetable;
+}
+
+
+
+
+
+
+
+
 
 
 
@@ -182,6 +220,9 @@ std::vector<uint> layers_movetable(){
     }while(next_permutation(ud.begin(), ud.end()));
     return movetable;
 }
+
+
+
 
 
 
