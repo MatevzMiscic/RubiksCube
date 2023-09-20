@@ -90,7 +90,7 @@ vector<ushort> sym::corner_rt(vector<ushort>& st){
     return represent;
 }
 
-// initializes vectors to convert between raw and symmetric cooradinates
+// initializes vectors to convert between raw and symmetric corner coordinates
 void sym::corner_conversion(vector<ushort>& sym_to_raw, vector<ushort>& raw_to_sym){
     vector<ushort> st = corner_st(); // compute symmetry table
     vector<ushort> rt = corner_rt(st); // compute representative table
@@ -106,3 +106,49 @@ void sym::corner_conversion(vector<ushort>& sym_to_raw, vector<ushort>& raw_to_s
     }
 }
 
+
+
+
+
+
+
+
+
+inline int out(int a){
+    if(a < 4) return a;
+    return a - 4;
+}
+
+// returns the inverse symmetry table for layer coordinate
+vector<uint> sym::layer_ist(){
+    compute();
+    vector<uint> ist(967680*16);
+    std::array<byte, 4> slice = {4, 5, 6, 7};
+    std::array<byte, 8> ud = {0, 1, 2, 3, 8, 9, 10, 11};
+    array<byte, 12> edge;
+    array<byte, 12> result;
+    std::array<byte, 4> slice_result;
+    std::array<byte, 8> ud_result;
+    int coord = 0;
+    do{
+        for(int i = 0; i < 4; ++i) edge[i] = ud[i];
+        for(int i = 8; i < 12; ++i) edge[i] = ud[i - 4];
+        do{
+            for(int i = 0; i < 4; ++i) edge[i + 4] = slice[i];
+            int sign = perm::sign(edge);
+            for(int i = 0; i < 16; ++i){
+                result = perm::mul(perm::mul(sym::symmetries_inv[i].edge, edge), sym::symmetries[i].edge);
+                for(int i = 0; i < 4; ++i) ud_result[i] = out(result[i]);
+                for(int i = 0; i < 4; ++i) slice_result[i] = result[i + 4] - 4;
+                for(int i = 8; i < 12; ++i) ud_result[i - 4] = out(result[i]);
+                ist[(coord << 4) | i] = 24 * perm::rank(ud_result) + perm::rank(slice_result);
+            }
+            coord += 1;
+        }while(std::next_permutation(slice.begin(), slice.end()));
+        //if(ud_coord % 4032 == 0) printf("%d / 10\n", ud_coord / 4032);
+    }while(std::next_permutation(ud.begin(), ud.end()));
+}
+
+void sym::layer_compressed_ist(vector<uint>& even_ist, vector<uint>& odd_ist){
+
+}
