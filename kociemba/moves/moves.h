@@ -8,6 +8,7 @@
 #include "../Symmetry/symmetry.h"
 #include "../math/Combination.h"
 #include "../math/Permutation.h"
+#include "../io/io.h"
 
 
 
@@ -128,7 +129,7 @@ std::vector<ushort> corner_movetable(){
             movetable[10*coord + i] = ushort(perm::rank(result));
         }
         coord += 1;
-    }while(next_permutation(perm.begin(), perm.end()));
+    }while(std::next_permutation(perm.begin(), perm.end()));
     return movetable;
 }
 
@@ -156,7 +157,7 @@ std::vector<ushort> corner_sym_movetable(){
 
 
 
-// returns move table for corner symetry class coordinate
+// returns move table for corner symmetry class coordinate
 std::vector<ushort> corner_cls_movetable(){
     std::vector<ushort> mt = corner_sym_movetable();
     std::vector<ushort> movetable(10*2768);
@@ -178,6 +179,10 @@ std::vector<ushort> corner_cls_movetable(){
 
 
 
+inline int in(int a){
+    if(a < 4) return a;
+    return a + 4;
+}
 
 inline int out(int a){
     if(a < 4) return a;
@@ -197,11 +202,11 @@ std::vector<uint> layers_movetable(){
     int ud_coord = 0;
     int slice_coord = 0; // not the real slice coord
     do{
+        for(int i = 0; i < 4; ++i) edge[i] = ud[i];
+        for(int i = 8; i < 12; ++i) edge[i] = ud[i - 4];
         slice_coord = 0;
         do{
-            for(int i = 0; i < 4; ++i) edge[i] = ud[i];
             for(int i = 0; i < 4; ++i) edge[i + 4] = slice[i];
-            for(int i = 0; i < 4; ++i) edge[i + 8] = ud[i + 4];
             //for(byte a : edge) printf("%d, ", a);
             //printf("\n");
             for(int j = 0; j < 10; ++j){
@@ -214,15 +219,74 @@ std::vector<uint> layers_movetable(){
                 movetable[10*(24*ud_coord + slice_coord) + j] = 24*perm::rank(ud_result) + perm::rank(slice_result);
             }
             slice_coord += 1;
-        }while(next_permutation(slice.begin(), slice.end()));
+        }while(std::next_permutation(slice.begin(), slice.end()));
         ud_coord += 1;
         if(ud_coord % 403 == 0) printf("%d / 100\n", ud_coord / 403);
-    }while(next_permutation(ud.begin(), ud.end()));
+    }while(std::next_permutation(ud.begin(), ud.end()));
     return movetable;
 }
 
 
 
+
+int layers_coord(std::array<byte, 8>& ud, std::array<byte, 4>& slice){
+    return 12 * perm::rank(ud) + perm::rank_sign(slice, perm::sign(slice));
+}
+
+// initializes vectors to convert between compressed and non-compressed layer coordinates
+void layer_conversion(std::vector<uint>& even, std::vector<uint>& odd, std::vector<uint>& layer){
+    even.assign(483840, 0);
+    odd.assign(483840, 0);
+    layer.assign(967680, 0);
+    std::array<byte, 4> slice = {0, 1, 2, 3};
+    std::array<byte, 8> ud = {0, 1, 2, 3, 4, 5, 6, 7};
+    int even_coord = 0, odd_coord = 0;
+    int ud_coord = 0, slice_coord = 0, coord = 0; // not the real slice coord
+    do{
+        int ud_sign = perm::sign(ud);
+        slice_coord = 0;
+        do{
+            //if(coord != 24*ud_coord + slice_coord) printf("coordinates do not match\n");
+            int sign = (ud_sign ^ perm::sign(slice)) & 1;
+            if(sign == 0){
+                even[even_coord] = coord;
+                layer[coord] = even_coord;
+                //if(even_coord != layers_coord(ud, slice)) printf("even coordinates do not match: %d, %d\n", even_coord, layers_coord(ud, slice));
+                even_coord += 1;
+            }else{
+                odd[odd_coord] = coord;
+                layer[coord] = odd_coord;
+                //if(odd_coord != layers_coord(ud, slice)) printf("odd coordinates do not match: %d, %d\n", odd_coord, layers_coord(ud, slice));
+                odd_coord += 1;
+            }
+            slice_coord += 1;
+            coord += 1;
+        }while(std::next_permutation(slice.begin(), slice.end()));
+        ud_coord += 1;
+        //if(ud_coord % 4032 == 0) printf("%d / 10\n", ud_coord / 4032);
+    }while(std::next_permutation(ud.begin(), ud.end()));
+    //printf("even: %d, odd: %d\n", even_coord, odd_coord);
+}
+
+
+
+
+void layers_compressed_movetable(std::vector<uint>& evenmt, std::vector<uint>& oddmt){
+    evenmt.assign(10*483840, 0);
+    oddmt.assign(10*483840, 0);
+    std::vector<uint> even;
+    std::vector<uint> odd;
+    std::vector<uint> layer;
+    layer_conversion(even, odd, layer);
+    std::vector<uint> layermt(10*967680);
+    io::read("layers.move", (int*)(&layermt[0]), 4*layermt.size());
+    for(int i = 0; i < 483840; ++i){
+        for(int j = 0; j < 10; ++j){
+            evenmt[10*i + j] = layer[layermt[10*even[i] + j]];
+            oddmt[10*i + j] = layer[layermt[10*odd[i] + j]];
+        }
+    }
+}
 
 
 
