@@ -48,7 +48,7 @@ namespace perm{
     template<size_t n>
     std::array<byte, n> mul(const std::array<byte, n>& a, const std::array<byte, n>& b){
         std::array<byte, n> c;
-        for(int i = 0; i < n; ++i) c[i] = b[a[i]];
+        for(int i = 0; i < n; ++i) c[i] = a[b[i]];
         return c;
     }
 
