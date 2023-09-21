@@ -6,6 +6,7 @@
 #include "symmetry.h"
 #include "../Settings.h"
 #include "../math/Permutation.h"
+#include "../moves/moves.h"
 
 
 using namespace std;
@@ -130,6 +131,7 @@ vector<uint> sym::layer_ist(){
     std::array<byte, 4> slice_result;
     std::array<byte, 8> ud_result;
     int coord = 0;
+    //int ud_coord = 0;
     do{
         for(int i = 0; i < 4; ++i) edge[i] = ud[i];
         for(int i = 8; i < 12; ++i) edge[i] = ud[i - 4];
@@ -146,9 +148,23 @@ vector<uint> sym::layer_ist(){
             coord += 1;
         }while(std::next_permutation(slice.begin(), slice.end()));
         //if(ud_coord % 4032 == 0) printf("%d / 10\n", ud_coord / 4032);
+        //ud_coord++;
     }while(std::next_permutation(ud.begin(), ud.end()));
+    return ist;
 }
 
 void sym::layer_compressed_ist(vector<uint>& even_ist, vector<uint>& odd_ist){
-
+    even_ist.assign(16*483840, 0);
+    odd_ist.assign(16*483840, 0);
+    vector<uint> even;
+    vector<uint> odd;
+    vector<uint> layer;
+    move::layer_conversion(even, odd, layer);
+    vector<uint> ist = layer_ist();
+    for(int i = 0; i < 483840; ++i){
+        for(int j = 0; j < 16; ++j){
+            even_ist[16*i + j] = layer[ist[16*even[i] + j]];
+            odd_ist[16*i + j] = layer[ist[16*odd[i] + j]];
+        }
+    }
 }
