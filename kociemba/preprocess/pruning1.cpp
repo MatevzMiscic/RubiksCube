@@ -46,9 +46,9 @@ struct coord{
     }
 
     static void compute_mts(){
-        twistmt = twist_movetable();
-        flipmt = flip_movetable();
-        slicemt = slice_movetable();
+        twistmt = move::twist_movetable();
+        flipmt = move::flip_movetable();
+        slicemt = move::slice_movetable();
     }
 
     inline coord neigh(int i){
@@ -184,9 +184,9 @@ void pruning_table2(table& arr){
 
 
 void pruning_table3(table& arr, int start, int end){
-    std::vector<ushort> twistmt = twist_movetable();
-    std::vector<ushort> flipmt = flip_movetable();
-    std::vector<ushort> slicemt = slice_movetable();
+    std::vector<ushort> twistmt = move::twist_movetable();
+    std::vector<ushort> flipmt = move::flip_movetable();
+    std::vector<ushort> slicemt = move::slice_movetable();
     printf("Move table calculated.\n");
 
     int distance = 0;
@@ -224,9 +224,9 @@ void pruning_table3(table& arr, int start, int end){
 
 
 void pruning_table4(table& arr, int start, int end){
-    std::vector<ushort> twistmt = twist_movetable();
-    std::vector<ushort> flipmt = flip_movetable();
-    std::vector<ushort> slicemt = slice_movetable();
+    std::vector<ushort> twistmt = move::twist_movetable();
+    std::vector<ushort> flipmt = move::flip_movetable();
+    std::vector<ushort> slicemt = move::slice_movetable();
     printf("Move table calculated.\n");
 
     int distance = 0;
