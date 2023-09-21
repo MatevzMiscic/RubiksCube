@@ -40,9 +40,9 @@ void Cube::shuffle(){
 
 
 // shuffles the cube
-void Cube::shuffle(vector<int>& index){
+void Cube::shuffle(vector<int>& index, int moves = 50){
     int n = index.size();
-    for(int i = 0; i < 50; ++i){
+    for(int i = 0; i < moves; ++i){
         (*this) *= Cube::moves[index[rand() % n]];
     }
 }
