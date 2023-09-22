@@ -40,14 +40,28 @@ void Cube::shuffle(){
 
 
 // shuffles the cube
-void Cube::shuffle(vector<int>& index, int moves = 50){
+vector<int> Cube::shuffle(vector<int>& index, int moves = 50){
+    vector<int> out;
     int n = index.size();
     for(int i = 0; i < moves; ++i){
-        (*this) *= Cube::moves[index[rand() % n]];
+        int rnd = rand();
+        //printf("move: %d\n", index[rnd % n]);
+        (*this) *= Cube::moves[index[rnd % n]];
+        out.push_back(index[rnd % n]);
     }
+    return out;
 }
 
 
+bool Cube::is_solved(){
+    for(int i = 0; i < 8; ++i){
+        if(corner[i] != i || twist[i] != 0) return false;
+    }
+    for(int i = 0; i < 12; ++i){
+        if(edge[i] != i || flip[i] != 0) return false;
+    }
+    return true;
+}
 
 
 
