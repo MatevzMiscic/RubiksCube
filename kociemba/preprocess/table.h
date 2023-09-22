@@ -27,4 +27,5 @@ struct table{
     }
 
     void print();
+    void stats();
 };
