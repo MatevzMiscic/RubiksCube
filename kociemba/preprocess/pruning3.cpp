@@ -2,6 +2,7 @@
 #include <array>
 #include <vector>
 #include <deque>
+#include <bitset>
 #include "../Settings.h"
 #include "../moves/moves.h"
 #include "../io/io.h"
@@ -25,6 +26,8 @@ vector<int> indeces = {2, 3, 6, 7, 8, 9, 10, 11, 14, 15};
 vector<int> inv = {0, 1, 6, 3, 4, 5, 2, 7, 8, 9, 10, 15, 12, 13, 14, 11};
 array<uint, 10> move_sign;
 
+bitset<2768> symmetric_pos;
+bitset<2768> corner_sign;
 
 
 struct coord{
@@ -34,7 +37,7 @@ struct coord{
     coord() : corner(0), layer(0){}
     coord(ushort corner, uint layer) : corner(corner), layer(layer){}
 
-    inline int index(){
+    inline uint index(){
         return 483840 * corner + (layer >> 1);
     }
 
@@ -71,6 +74,9 @@ int layers_compressed_coord(Cube& cube){
     return 12 * perm::rank(ud) + perm::rank_sign(slice, perm::sign(slice));
 }
 
+
+
+
 coord get_one_coord(Cube& cube){
     ushort corner = raw_to_sym[cube.corner_coord()] >> 4;
     ushort repr = rt[corner];
@@ -88,7 +94,7 @@ coord get_one_coord(Cube& cube){
     return out;
 }
 
-vector<coord> get_coords(coord& v){
+vector<coord> get_coords(const coord& v){
     vector<coord> out;
     ushort repr = rt[v.corner];
     int sign = v.layer & 1;
@@ -104,9 +110,47 @@ vector<coord> get_coords(coord& v){
 }
 
 
+bool diff(const vector<coord>& vec){
+    for(int i = 1; i < vec.size(); ++i){
+        if(vec[i].corner != vec[0].corner || vec[i].layer != vec[0].layer) return true;
+    }
+    return false;
+}
+void printv(const vector<coord>& v){
+    for(const coord& c : v) c.print();
+    printf("\n");
+}
 
 
 
+
+bitset<2768> symmetric(){
+    bitset<2768> out;
+    for(int i = 0; i < 2768; ++i){
+        uint coord = rt[i];
+        for(int j = 1; j < 16; ++j){
+            if(st[(coord << 4) | j] == coord){
+                out[i] = true;
+                break;
+            }
+        }
+    }
+    return out;
+}
+bitset<2768> cornersign(){
+    bitset<2768> out;
+    bitset<40320> sign;
+    array<byte, 8> perm = {0, 1, 2, 3, 4, 5, 6, 7};
+    int coord = 0;
+    do{
+        sign[coord] = perm::sign(perm);
+        coord += 1;
+    }while(next_permutation(perm.begin(), perm.end()));
+    for(int i = 0; i < 2768; ++i){
+        out[i] = sign[rt[i]];
+    }
+    return out;
+}
 
 
 
@@ -118,10 +162,12 @@ void pruning_table(table& arr, int bound){
     arr.fill(3);
     arr.set(s.index(), 0);
 
+    int depth_count = 0;
     int count = 0;
 
     while(!queue.empty()){
         count += 1;
+        depth_count += 1;
         coord u = queue.front();
         queue.pop_front();
 
@@ -130,8 +176,8 @@ void pruning_table(table& arr, int bound){
         int dist = arr.get(u.index()) + 1;
         if(dist == 3) dist = 0;
         if(distance % 3 != dist){
-            printf("Up to dist %d, count: %d\n", distance - 1, count - 1);
-            count = 1;
+            printf("Up to dist %d, count: %d\n", distance - 1, depth_count - 1);
+            depth_count = 1;
             distance += 1;
         }
 
@@ -141,30 +187,126 @@ void pruning_table(table& arr, int bound){
             uint index = v.index();
             if(arr.get(index) == 3){
                 //arr.set(index, dist);
-                for(coord& w : get_coords(v)) arr.set(w.index(), dist);
+                //for(coord& w : get_coords(v)) arr.set(w.index(), dist);
+                if(symmetric_pos[v.corner]){
+                    for(coord& w : get_coords(v)) arr.set(w.index(), dist);
+                }else{
+                    arr.set(index, dist);
+                    /*
+                    vector<coord> vec = get_coords(v);
+                    if(diff(vec)) printv(vec);
+                    */
+                }
                 if(distance < bound) queue.push_back(v);
             }
         }
     }
+    printf("Up to dist %d, count: %d\n", distance - 1, depth_count);
     printf("count = %d\n", count);
+}
+
+void forward_search(table& arr, int start, int end){
+    for(int d = start; d <= end; ++d){
+        int prev = (d + 2) % 3;
+        int dist = d % 3;
+        printf("prev = %d, dist = %d\n", prev, dist);
+        uint index = 0;
+        for(uint corner = 0; corner < 2768; ++corner){
+            uint sign = corner_sign[corner];
+            if(corner % 28 == 0) printf("%d / 100\n", corner / 28);
+            for(uint layer = 0; layer < 483840; ++layer){
+                if(arr.get(index) == prev){
+                    for(int i = 0; i < 10; ++i){
+                        ushort corner_sym = cornermt[10*(corner << 4) + i];
+                        //coord v(corner_sym >> 4, ist[move_sign[i] ^ sign][(layermt[sign][10 * layer + i] << 4) | (corner_sym & 15)]);
+                        coord v(corner_sym >> 4, (ist[move_sign[i] ^ sign][(layermt[sign][10 * layer + i] << 4) | (corner_sym & 15)] << 1) | (move_sign[i] ^ sign));
+                        uint result = v.index();
+                        if(arr.get(result) == 3){
+                            if(symmetric_pos[v.corner]){
+                                for(coord& w : get_coords(v)) arr.set(w.index(), dist);
+                            }else{
+                                arr.set(result, dist);
+                            }
+                        }
+                    }
+                }
+                index += 1;
+            }
+        }
+    }
+}
+
+
+void backward_search(table& arr, int start, int end){
+    for(int d = start; d <= end; ++d){
+        int prev = (d + 2) % 3;
+        int dist = d % 3;
+        printf("prev = %d, dist = %d\n", prev, dist);
+        uint index = 0;
+        for(uint corner = 0; corner < 2768; ++corner){
+            uint sign = corner_sign[corner];
+            if(corner % 28 == 0) printf("%d / 100\n", corner / 28);
+            for(uint layer = 0; layer < 483840; ++layer){
+                if(arr.get(index) == 3){
+                    for(int i = 0; i < 10; ++i){
+                        ushort corner_sym = cornermt[10*(corner << 4) + i];
+                        uint result = 483840 * (corner_sym >> 4) + ist[move_sign[i] ^ sign][(layermt[sign][10 * layer + i] << 4) | (corner_sym & 15)];
+                        if(arr.get(result) == prev){
+                            arr.set(index, dist);
+                        }
+                    }
+                }
+                index += 1;
+            }
+        }
+    }
 }
 
 
 
 
+
+struct coord2{
+    uint corner; // symmetric corner coordinate
+    uint layer; // compressed layer coordinate
+    uint sign; // sign of corner
+
+    coord2(uint corner, uint layer, uint sign) : corner(corner), layer(layer), sign(sign){}
+
+    coord2(Cube& cube){
+        corner = raw_to_sym[cube.corner_coord()];
+        layer = layers_compressed_coord(cube);
+        sign = perm::sign(cube.corner);
+    }
+
+    inline uint index(){
+        return 483840 * (corner >> 4) + ist[sign][(layer << 4) | (corner & 15)];
+    }
+
+    inline coord2 neigh(int i){
+        return coord2(cornermt[10 * corner + i], layermt[sign][10 * layer + i], move_sign[i] ^ sign);
+    }
+
+    inline void print() const {
+        printf("corner: %d, layer %d, sign: %d\n", corner >> 4, layer, sign);
+    }
+
+};
+
+
+
 vector<int> solve(Cube& cube, table& arr){
     vector<int> moves;
-    coord c = get_one_coord(cube);
-    c.print();
+    coord2 c(cube);
     bool run = true;
     while(run){
         run = false;
         int dist = (arr.get(c.index()) + 2) % 3;
-        printf("c = %d, dist = %d, \n", c.index(), arr.get(c.index()));
+        //printf("c = %d, dist = %d, \n", c.index(), arr.get(c.index()));
         for(int i = 0; i < 10; ++i){
-            coord d = c.neigh(i);
+            coord2 d = c.neigh(i);
             if(arr.get(d.index()) == dist){
-                printf("move %d\n", indeces[i]);
+                //printf("move %d\n", indeces[i]);
                 moves.push_back(i);
                 run = true;
                 c = d;
@@ -195,9 +337,18 @@ int main(){
     sym::compute();
 
     for(int i = 0; i < 10; ++i) move_sign[i] = perm::sign(Cube::moves[index[i]].corner);
+    symmetric_pos = symmetric();
+    printf("symmetric positions: %d\n", symmetric_pos.count());
+    corner_sign = cornersign();
+    printf("all calculated\n");
 
+    int depth = 11;
     table arr(2768 * 483840);
-    pruning_table(arr, 4);
+    pruning_table(arr, 12);
+    forward_search(arr, 13, 15);
+    backward_search(arr, 16, 18);
+    //io::write("stage22.bin", arr.bits, (arr.len + 3) / 4);
+    arr.stats();
 
     // testing
     /*
@@ -210,12 +361,35 @@ int main(){
     printf("\n");
     solve(c, arr);
     */
-    
-    for(int i = 0; i < 5000; ++i){
+    //*
+    bool allok = true;
+    for(int i = 0; i < 50000; ++i){
         Cube cube;
-        cube.shuffle(indeces, 4);
-        coord c = get_one_coord(cube);
-        int dist = arr.get(c.index());
-        if(dist == 3) cube.print();
+        vector<int> shuf = cube.shuffle(indeces, 50);
+        Cube copy = cube;
+        //cube.print();
+        vector<int> moves = solve(copy, arr);
+        for(int i : moves) copy *= Cube::moves[indeces[i]];
+        //cube.print();
+        bool flag = copy.is_solved();
+        /*
+        if(!flag){
+            cube.print();
+            printf("shuffle: ");
+            for(int m : shuf) printf("%d, ", m);
+            printf("\nsolution: ");
+            for(int m : moves) printf("%d, ", indeces[m]);
+            printf("\n");
+            Cube last_move = Cube::moves[shuf.back()];
+            copy *= last_move * last_move * last_move;
+            vector<int> moves = solve(copy, arr);
+            for(int i : moves) copy *= Cube::moves[indeces[i]];
+            for(int m : moves) printf("%d, ", indeces[m]);
+            copy.print();
+        }
+        */
+        allok &= flag;
     }
+    printf("ok: %d\n", allok);
+    //*/
 }
