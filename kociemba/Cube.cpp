@@ -53,6 +53,19 @@ vector<int> Cube::shuffle(vector<int>& index, int moves = 50){
 }
 
 
+bool Cube::in_subgroup(){
+    for(int i = 0; i < 8; ++i){
+        if(twist[i] != 0) return false;
+    }
+    for(int i = 0; i < 12; ++i){
+        if(flip[i] != 0) return false;
+    }
+    for(int i = 4; i < 8; ++i){
+        if(edge[i] < 4 || 8 <= edge[i]) return false;
+    }
+    return true;
+}
+
 bool Cube::is_solved(){
     for(int i = 0; i < 8; ++i){
         if(corner[i] != i || twist[i] != 0) return false;

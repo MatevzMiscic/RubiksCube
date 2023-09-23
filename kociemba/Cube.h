@@ -30,6 +30,7 @@ class Cube{
     void shuffle();
     std::vector<int> shuffle(std::vector<int>& index, int moves);
 
+    bool in_subgroup();
     bool is_solved();
 
     void operator*=(const Cube& cube);
