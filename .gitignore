@@ -211,6 +211,7 @@ stage2.bin
 stage2_corner.bin
 stage2_layer.bin
 *.sym
+files
 
 # move tables
 *.move
