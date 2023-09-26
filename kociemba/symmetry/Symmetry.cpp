@@ -137,7 +137,7 @@ vector<uint> sym::layer_ist(){
         for(int i = 8; i < 12; ++i) edge[i] = ud[i - 4];
         do{
             for(int i = 0; i < 4; ++i) edge[i + 4] = slice[i];
-            int sign = perm::sign(edge);
+            //int sign = perm::sign(edge);
             for(int i = 0; i < 16; ++i){
                 result = perm::mul(perm::mul(sym::symmetries_inv[i].edge, edge), sym::symmetries[i].edge);
                 for(int i = 0; i < 4; ++i) ud_result[i] = out(result[i]);
