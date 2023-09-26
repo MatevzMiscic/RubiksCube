@@ -32,6 +32,7 @@ class Cube{
 
     bool in_subgroup();
     bool is_solved();
+    bool operator==(const Cube& other) const;
 
     void operator*=(const Cube& cube);
     Cube operator*(const Cube& cube);

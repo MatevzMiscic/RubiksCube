@@ -76,6 +76,16 @@ bool Cube::is_solved(){
     return true;
 }
 
+bool Cube::operator==(const Cube& other) const {
+    for(int i = 0; i < 8; ++i){
+        if(corner[i] != other.corner[i] || twist[i] != other.twist[i]) return false;
+    }
+    for(int i = 0; i < 12; ++i){
+        if(edge[i] != other.edge[i] || flip[i] != other.flip[i]) return false;
+    }
+    return true;
+}
+
 
 
 // multiplication table for group D6
