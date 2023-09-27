@@ -2,7 +2,6 @@
 #include <array>
 #include <vector>
 #include <string>
-#include <unordered_map>
 #include <chrono>
 #include <thread>
 #include "../Cube.h"
@@ -12,6 +11,7 @@
 #include "../Settings.h"
 #include "../preprocess/table.h"
 #include "convert.h"
+#include "solver.h"
 
 
 
@@ -98,10 +98,38 @@ vector<ushort> corner_mt;
 vector<uint> layer_mt[2];
 vector<uint> corner_ist[2];
 
-vector<int> inv = {0, 1, 6, 3, 4, 5, 2, 7, 8, 9, 10, 15, 12, 13, 14, 11};
 array<uint, 10> move_sign;
 
 table stage2_pt(2768 * 483840);
+
+
+
+bool solver::init(){
+    bool read = true;
+    cmb::calcbin();
+    twist_mt = move::twist_movetable();
+    flip_mt = move::flip_movetable();
+    slice_mt = move::slice_movetable();
+    read &= io::read("../preprocess/stage1.bin", stage1_pt.bits, (stage1_pt.len + 3) / 4);
+
+    array<int, 10> gens = {2, 3, 6, 7, 8, 9, 10, 11, 14, 15};
+    corner_mt = move::corner_sym_movetable();
+    move::layers_compressed_movetable(layer_mt[0], layer_mt[1]);
+    corner_ist[0].assign(16*483840, 0);
+    corner_ist[1].assign(16*483840, 0);
+    read &= io::read("../symmetry/layer_even.sym", (int*)(&corner_ist[0][0]), 4*corner_ist[0].size());
+    read &= io::read("../symmetry/layer_odd.sym", (int*)(&corner_ist[1][0]), 4*corner_ist[1].size());
+    read &= io::read("../preprocess/stage2.bin", stage2_pt.bits, (stage2_pt.len + 3) / 4);
+    st = sym::corner_st();
+    rt = sym::corner_rt(st);
+    sym::corner_conversion(sym_to_raw, raw_to_sym);
+    sym::compute();
+    for(int i = 0; i < 10; ++i) move_sign[i] = perm::sign(Cube::moves[gens[i]].corner);
+
+    return read;
+}
+
+
 
 
 inline int out(int a){
@@ -169,10 +197,9 @@ vector<ubyte> stage2(Cube& cube){
 
 
 
-vector<ubyte> solve(Cube cube){
+vector<ubyte> solver::solve(Cube cube){
     vector<ubyte> first = stage1(cube);
     for(int move : first) cube *= Cube::moves[move];
-    //cube.print();
     vector<ubyte> second = stage2(cube);
     first.insert(first.end(), second.begin(), second.end());
     return first;
@@ -349,7 +376,7 @@ vector<ubyte> parallel_solve(Cube& cube){
     return solutions[idx];
 }
 
-void timelimit_search2(vector<ubyte>& solution, int& len, vector<ubyte>& moves, Cube cube, coord1& coord, int slack, chrono::steady_clock::time_point& end){
+void timelimit_search(vector<ubyte>& solution, int& len, vector<ubyte>& moves, Cube cube, coord1& coord, int slack, chrono::steady_clock::time_point& end){
     if(chrono::steady_clock::now() >= end && len < 31){
         //printf("%d\n", chrono::duration_cast<chrono::microseconds>(end - chrono::steady_clock::now()).count());
         return;
@@ -373,7 +400,7 @@ void timelimit_search2(vector<ubyte>& solution, int& len, vector<ubyte>& moves, 
         int change = (stage1_pt.get(next.index()) + 4 - dist) % 3;
         if(change <= slack){
             moves.push_back(i);
-            timelimit_search2(solution, len, moves, cube * Cube::moves[i], next, slack - change, end);
+            timelimit_search(solution, len, moves, cube * Cube::moves[i], next, slack - change, end);
             moves.pop_back();
         }
     }
@@ -385,7 +412,7 @@ void timelimit_wrapper(Cube& cube, vector<ubyte>& solution, chrono::steady_clock
     vector<ubyte> moves;
     coord1 coord(cube);
     for(int i = 0; i < 6; ++i){
-        timelimit_search2(solution, len, moves, cube, coord, i, end);
+        timelimit_search(solution, len, moves, cube, coord, i, end);
         if(chrono::steady_clock::now() > end){
             //printf("last stage %d, timeout :%d\n", i, -chrono::duration_cast<chrono::microseconds>(end - chrono::steady_clock::now()).count());
             break;
@@ -394,7 +421,7 @@ void timelimit_wrapper(Cube& cube, vector<ubyte>& solution, chrono::steady_clock
 }
 
 
-vector<ubyte> timelimit_solve(Cube& cube, int ms){
+vector<ubyte> solver::timelimit_solve(const Cube& cube, int ms){
     Cube inv = cube.inv();
     array<Cube, 6> cubes = {
         cube, sym::thirdturn * cube * sym::thirdturn.inv(), sym::thirdturn.inv() * cube * sym::thirdturn, 
@@ -421,6 +448,80 @@ vector<ubyte> timelimit_solve(Cube& cube, int ms){
     return solutions[idx];
 }
 
+
+
+void movelimit_search(vector<ubyte>& solution, int& len, vector<ubyte>& moves, Cube cube, coord1& coord, int slack, ubyte movelimit){
+    if(coord.is_solved()){
+        if(slack == 0 && (moves.empty() || !subgroup_gen[moves.back()])){
+            vector<ubyte> second = stage2(cube);
+            if(moves.size() + second.size() < len){
+                len = moves.size() + second.size();
+                solution = moves;
+                solution.insert(solution.end(), second.begin(), second.end());
+            }
+        }
+        return;
+    }
+    int dist = stage1_pt.get(coord.index());
+    int last = 6;
+    if(!moves.empty()) last = moves.back() % 6;
+    for(ubyte i : next_moves[last]){
+        coord1 next = coord.neigh(i);
+        int change = (stage1_pt.get(next.index()) + 4 - dist) % 3;
+        if(change <= slack){
+            moves.push_back(i);
+            movelimit_search(solution, len, moves, cube * Cube::moves[i], next, slack - change, movelimit);
+            moves.pop_back();
+            if(len <= movelimit) return;
+        }
+    }
+}
+
+void movelimit_wrapper(Cube& cube, vector<ubyte>& solution, ubyte movelimit){
+    //solution = best_solve(cube);
+    int len = 31;
+    vector<ubyte> moves;
+    coord1 coord(cube);
+    for(int i = 0; i < 6; ++i){
+        movelimit_search(solution, len, moves, cube, coord, i, movelimit);
+        if(len <= movelimit){
+            break;
+        }
+    }
+}
+
+
+vector<ubyte> solver::movelimit_solve(const Cube& cube, ubyte movelimit){
+    Cube inv = cube.inv();
+    array<Cube, 6> cubes = {
+        cube, sym::thirdturn * cube * sym::thirdturn.inv(), sym::thirdturn.inv() * cube * sym::thirdturn, 
+        inv, sym::thirdturn * inv * sym::thirdturn.inv(), sym::thirdturn.inv() * inv * sym::thirdturn, 
+    };
+    array<vector<ubyte>, 6> solutions;
+    array<thread, 6> threads;
+    for(int i = 0; i < 6; ++i){
+        threads[i] = thread(movelimit_wrapper, ref(cubes[i]), ref(solutions[i]), movelimit);
+    }
+    for(int i = 0; i < 6; ++i){
+        threads[i].join();
+    }
+    int idx = 0;
+    for(int i = 1; i < 6; ++i){
+        if(solutions[i].size() < solutions[idx].size()) idx = i;
+    }
+    if(idx >= 3){
+        reverse(solutions[idx].begin(), solutions[idx].end());
+    }
+    for(int i = 0; i < solutions[idx].size(); ++i) solutions[idx][i] = post_process[idx][solutions[idx][i]];
+    //printf("index: %d\n", idx);
+    return solutions[idx];
+}
+
+
+
+
+
+
 int recognise(const Cube& cube){
     for(int i = 0; i < 18; ++i){
         if(cube == Cube::moves[i]) return i;
@@ -428,7 +529,7 @@ int recognise(const Cube& cube){
     return -1;
 }
 
-int main(){
+int main111(){
     bool read = true;
     /*
     for(int i = 0; i < 18; ++i){
@@ -491,9 +592,10 @@ int main(){
         cube.shuffle();
         Cube copy = cube;
         chrono::steady_clock::time_point begin = chrono::steady_clock::now();
-        //vector<ubyte> moves = three_axis_solve(copy);
-        //vector<ubyte> moves = parallel_solve(copy);timelimit_solve
-        vector<ubyte> moves = timelimit_solve(copy, 100);
+        //vector<ubyte> moves = solver::three_axis_solve(copy);
+        //vector<ubyte> moves = solver::parallel_solve(copy);
+        //vector<ubyte> moves = solver::timelimit_solve(copy, 100);
+        vector<ubyte> moves = solver::movelimit_solve(copy, 22);
         chrono::steady_clock::time_point end = chrono::steady_clock::now();
         ll time = (chrono::duration_cast<chrono::microseconds>(end - begin).count());
         total_time += time;
@@ -577,4 +679,5 @@ int main(){
     printf("max moves: %d\n", max);
     printf("min moves: %d\n", min);
     */
+   return 0;
 }

@@ -30,21 +30,21 @@ class Cube{
     void shuffle();
     std::vector<int> shuffle(std::vector<int>& index, int moves);
 
-    bool in_subgroup();
-    bool is_solved();
+    bool in_subgroup() const;
+    bool is_solved() const;
     bool operator==(const Cube& other) const;
 
     void operator*=(const Cube& cube);
-    Cube operator*(const Cube& cube);
+    Cube operator*(const Cube& cube) const;
 
-    Cube inv();
+    Cube inv() const;
 
-    uint corner_coord();
-    uint twist_coord();
-    uint edge_coord();
-    uint flip_coord();
-    uint slice_coord();
-    uint flipslice_coord();
+    uint corner_coord() const;
+    uint twist_coord() const;
+    uint edge_coord() const;
+    uint flip_coord() const;
+    uint slice_coord() const;
+    uint flipslice_coord() const;
 
-    void print();
+    void print() const;
 };

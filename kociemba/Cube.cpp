@@ -53,7 +53,7 @@ vector<int> Cube::shuffle(vector<int>& index, int moves = 50){
 }
 
 
-bool Cube::in_subgroup(){
+bool Cube::in_subgroup() const {
     for(int i = 0; i < 8; ++i){
         if(twist[i] != 0) return false;
     }
@@ -66,7 +66,7 @@ bool Cube::in_subgroup(){
     return true;
 }
 
-bool Cube::is_solved(){
+bool Cube::is_solved() const {
     for(int i = 0; i < 8; ++i){
         if(corner[i] != i || twist[i] != 0) return false;
     }
@@ -123,7 +123,7 @@ void Cube::operator*=(const Cube& cube){
     this->flip = flip;
 }
 
-Cube Cube::operator*(const Cube& cube){
+Cube Cube::operator*(const Cube& cube) const {
     array<byte, 8> corner;
     array<byte, 8> twist;
     array<byte, 12> edge;
@@ -141,7 +141,7 @@ Cube Cube::operator*(const Cube& cube){
 }
 
 // returns inverse of a cube
-Cube Cube::inv(){
+Cube Cube::inv() const {
     array<byte, 8> corner;
     array<byte, 8> twist;
     array<byte, 12> edge;
@@ -164,12 +164,12 @@ Cube Cube::inv(){
 
 
 // returns corner coordinate
-uint Cube::corner_coord(){
+uint Cube::corner_coord() const {
     return perm::rank(corner);
 }
 
 // returns twist coordinate in 'is replaced by' representation
-uint Cube::twist_coord(){
+uint Cube::twist_coord() const {
     int coord = 0;
     for(int i = 0; i < 7; ++i){
         coord = 3*coord + twist[i];
@@ -178,12 +178,12 @@ uint Cube::twist_coord(){
 }
 
 // returns edge coordinate
-uint Cube::edge_coord(){
+uint Cube::edge_coord() const {
     return perm::rank(edge);
 }
 
 // returns flip coordinate in 'is replaced by' representation
-uint Cube::flip_coord(){
+uint Cube::flip_coord() const {
     int coord = 0;
     for(int i = 0; i < 11; ++i){
         coord |= flip[i] << i;
@@ -192,7 +192,7 @@ uint Cube::flip_coord(){
 }
 
 // returns slice coordinate in 'is replaced by' representation
-uint Cube::slice_coord(){
+uint Cube::slice_coord() const {
     int coord = 0;
     for(int i = 0; i < 12; ++i){
         if(4 <= edge[i] && edge[i] <= 7){
@@ -203,7 +203,7 @@ uint Cube::slice_coord(){
 }
 
 // returns flipslice coordinate in 'is replaced by' representation
-uint Cube::flipslice_coord(){
+uint Cube::flipslice_coord() const {
     return 495 * flip_coord() + slice_coord();
 }
 
@@ -244,7 +244,7 @@ array<Cube, 18> Cube::moves = {
 
 
 // prints the cube
-void Cube::print(){
+void Cube::print() const {
     printf("(");
     for(byte c : corner) printf("%d ", c);
     printf("), (");
