@@ -54,7 +54,7 @@ int find_corner(triple& col){
 
 bool cnv::to_cube(std::array<ubyte, 54>& colors, Cube& cube){
     std::array<ubyte, 6> map;
-    for(int i = 0; i < 6; ++i) map[i] = colors[4 + 9*i];
+    for(int i = 0; i < 6; ++i) map[colors[4 + 9*i]] = i;
     for(int i = 0; i < 54; ++i) colors[i] = map[colors[i]];
     for(int i = 0; i < 8; ++i){
         triple& tri = corner_to_triple[i];
