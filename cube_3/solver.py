@@ -101,7 +101,7 @@ def solve_stage(cube, data, hashf, allowed_moves):
                 dist = d
                 moves.append(move)
                 break
-    print("len ...", len(moves))
+    #print("len ...", len(moves))
     return moves
 
 # solves the cube using Thistlethwaite's algorithm
@@ -112,7 +112,7 @@ def solve(cube):
     allowed_moves = [moves1, moves2, moves3, moves4]
     out = []
     for i in range(4):
-        print(i)
+        #print(i)
         moves = solve_stage(clone, stages[i], hashes[i], allowed_moves[i])
         clone.applyall(moves)
         out.extend(moves)
