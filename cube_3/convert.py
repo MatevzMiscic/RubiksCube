@@ -17,6 +17,12 @@ for i in  range(12):
 #print(triple_to_corner)
 
 def tocube(array):
+    colors = [0 for i in range(6)]
+    for i in range(6):
+        colors[array[9*i + 4]] = i
+    for i in range(54):
+        array[i] = colors[array[i]]
+    print(array)
     corner = [-1 for _ in range(8)]
     cornerori = [-1 for _ in range(8)]
     edge = [0 for _ in range(12)]
@@ -38,11 +44,13 @@ def tocube(array):
             corner[origin] = i
             cornerori[origin] = 2
         else:
+            print("problem with corner:", i)
             return None
     for i in range(12):
         #print(i)
         a, b = edge_to_pair[i]
         a, b = array[a], array[b]
+        print(a, b)
         if (a, b) in pair_to_edge:
             origin = pair_to_edge[(a, b)]
             edge[origin] = i
@@ -52,7 +60,9 @@ def tocube(array):
             edge[origin] = i
             edgeori[origin] = 1
         else:
+            print("problem with edge:", i)
             return None
+        print("ori, i: ", origin, i)
     return Cube(corner, cornerori, edge, edgeori)
 
 def tocolors(cube):
