@@ -11,9 +11,13 @@ Optimal solver for smaller cube and Thistlethwaite's algorithm are implemented i
 ## Optimal 2 by 2 solver
 
 One can solve a cube using a `solve2` function defined in `solver.py`:
-```moves = solve2(cube)```
+```python
+moves = solve2(cube)
+```
 This function returns a list of moves that solve the given cube. To transform those moves to their names a `tonames` function can be used:
-```solution = tonames(moves)```
+```python
+solution = tonames(moves)
+```
 which returns a list of strings that correspond to moves.
 
 The cube must be given abstraclty in terms of permutation and orientations of pieces. As of now, I have not implemented method that would transform array of colors to such abstract representation.
@@ -54,5 +58,6 @@ Now ```moves``` is a vector of indeces to ```Cube::moves``` array, that can colv
 
 - At the moment, only second phase of kociemba's algorithm uses symmetry reduction, to save space. I have to implement it in Thistlethwaite's algorithm and in the first phase.
 - Use distance modulo 3 in pruning tables of Thistlethwaite's algorithm.
-- Compress 5 positions to byte instead of 4 in pruning tables. Currently each position takes 2 bits.
-- Add performance to readme
+- Compress 5 positions to a byte instead of 4 in pruning tables. Currently each position takes 2 bits.
+- Converter from colors to cube for smaller Rubik's cube
+- Add performance review of Kociemba's algorithm to readme
