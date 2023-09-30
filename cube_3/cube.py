@@ -21,6 +21,18 @@ class Cube:
             cube.apply(Cube.moves[randint(0, len(Cube.moves) - 1)])
         return cube
 
+    def solvable(self):
+        return sum(self.cornerori) % 3 == 0 and sum(self.edgeori) % 2 == 0 and sign(self.corner) == sign(self.edge)
+
+    def is_solved(self):
+        for i in range(8):
+            if self.corner[i] != i or self.cornerori[i] != 0:
+                return False
+        for i in range(12):
+            if self.edge[i] != i or self.edgeori[i] != 0:
+                return False
+        return True
+
     def clone(self):
         return Cube(self.corner.copy(), self.cornerori.copy(), self.edge.copy(), self.edgeori.copy())
 
